@@ -1,0 +1,8 @@
+prefix=/home/brucesz/Desktop/pnc_learn/hw_1/cw/devel
+
+Name: waypoint_generator
+Description: Description of waypoint_generator
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/brucesz/Desktop/pnc_learn/hw_1/cw/devel/lib 
+Requires: 

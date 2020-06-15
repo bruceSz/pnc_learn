@@ -1,0 +1,2 @@
+grid_path_searcher:rviz_plugins:waypoint_generator
+-DCATKIN_DEVEL_PREFIX=/home/brucesz/Desktop/pnc_learn/hw_1/cw/devel -DCMAKE_INSTALL_PREFIX=/home/brucesz/Desktop/pnc_learn/hw_1/cw/install -G Unix Makefiles
