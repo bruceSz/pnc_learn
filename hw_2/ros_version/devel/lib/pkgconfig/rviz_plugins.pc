@@ -1,8 +1,0 @@
-prefix=/home/brucesz/git/pnc_learn/hw_2/ros版本作业/devel
-
-Name: rviz_plugins
-Description: Description of rviz_plugins
-Version: 0.0.0
-Cflags: 
-Libs: -L/home/brucesz/git/pnc_learn/hw_2/ros版本作业/devel/lib 
-Requires: 
