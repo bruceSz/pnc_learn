@@ -4,8 +4,16 @@ function n_index = node_index(OPEN,xval,yval)
     %
     %   Copyright 2009-2010 The MathWorks, Inc.
     i=1;
+    len = size(OPEN, 1)
     while(OPEN(i,2) ~= xval || OPEN(i,3) ~= yval )
         i=i+1;
+        if (i > len)
+            break;
+        end
     end;
-    n_index=i;
+    if (i <= len)
+        n_index=i;
+    else 
+        n_index = -1
+    end
 end
