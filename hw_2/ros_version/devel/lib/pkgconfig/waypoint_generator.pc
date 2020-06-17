@@ -1,0 +1,8 @@
+prefix=/home/brucesz/git/pnc_learn/hw_2/ros版本作业/devel
+
+Name: waypoint_generator
+Description: Description of waypoint_generator
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/brucesz/git/pnc_learn/hw_2/ros版本作业/devel/lib 
+Requires: 

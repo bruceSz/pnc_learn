@@ -1,0 +1,18 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/brucesz/git/pnc_learn/hw_2/ros版本作业/src/grid_path_searcher/src/vec_rm.cpp
+cstdlib
+-
+iostream
+-
+vector
+-
+algorithm
+-
+
