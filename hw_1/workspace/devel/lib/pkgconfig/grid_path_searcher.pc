@@ -1,8 +1,0 @@
-prefix=/home/brucesz/Desktop/pnc_learn/hw_1/cw/devel
-
-Name: grid_path_searcher
-Description: Description of grid_path_searcher
-Version: 0.0.1
-Cflags: -I/home/brucesz/Desktop/pnc_learn/hw_1/cw/src/grid_path_searcher/include
-Libs: -L/home/brucesz/Desktop/pnc_learn/hw_1/cw/devel/lib 
-Requires: 

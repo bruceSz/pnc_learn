@@ -1,8 +1,0 @@
-prefix=/home/brucesz/Desktop/pnc_learn/hw_1/cw/devel
-
-Name: rviz_plugins
-Description: Description of rviz_plugins
-Version: 0.0.0
-Cflags: 
-Libs: -L/home/brucesz/Desktop/pnc_learn/hw_1/cw/devel/lib 
-Requires: 
