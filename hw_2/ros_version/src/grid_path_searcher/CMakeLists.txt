@@ -48,6 +48,6 @@ target_link_libraries( random_complex
     ${PCL_LIBRARIES} )  
 
 
-add_executable(test_vec_rm
-    src/vec_rm.cpp
+add_executable(test_std
+    src/std_test.cpp
 )

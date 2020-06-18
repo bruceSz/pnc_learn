@@ -54,7 +54,7 @@ class AstarPathFinder
 	private:
 		double getManhattanHeu(GridNodePtr start, GridNodePtr end) ;
 		double getDiagonalHeu(GridNodePtr start, GridNodePtr end);
-		double getEuclideanHeu(GridNodePtr start, GridNodePtr end);
+		double getEuclidean(GridNodePtr start, GridNodePtr end);
 };
 
 #endif
