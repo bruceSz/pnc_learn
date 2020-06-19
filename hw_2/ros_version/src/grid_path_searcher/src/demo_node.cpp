@@ -52,6 +52,7 @@ void pathFinding(const Vector3d start_pt, const Vector3d target_pt);
 
 void rcvWaypointsCallback(const nav_msgs::Path & wp)
 {     
+    ROS_INFO("recv msg waypoints frame: %s " , wp.header.frame_id.c_str());
     if( wp.poses[0].pose.position.z < 0.0 || _has_map == false )
         return;
 
@@ -107,11 +108,12 @@ void rcvPointCloudCallBack(const sensor_msgs::PointCloud2 & pointcloud_map)
 
 void pathFinding(const Vector3d start_pt, const Vector3d target_pt)
 {
+    ROS_INFO("Start path finding.");
     //Call A* to search for a path
     _astar_path_finder->AstarGraphSearch(start_pt, target_pt);
 
     //Retrieve the path
-    auto grid_path     = _astar_path_finder->getPath();
+    auto grid_path     = _astar_path_finder->getPath(start_pt);
     auto visited_nodes = _astar_path_finder->getVisitedNodes();
 
     //Visualize the result
@@ -121,6 +123,7 @@ void pathFinding(const Vector3d start_pt, const Vector3d target_pt)
     //Reset map for next call
     _astar_path_finder->resetUsedGrids();
 
+    ROS_INFO("path finding done.");
     //_use_jps = 0 -> Do not use JPS
     //_use_jps = 1 -> Use JPS
     //you just need to change the #define value of _use_jps
@@ -198,6 +201,7 @@ int main(int argc, char** argv)
 
 void visGridPath( vector<Vector3d> nodes, bool is_use_jps )
 {   
+    ROS_INFO("no of node on the path is : %d" , nodes.size());
     visualization_msgs::Marker node_vis; 
     node_vis.header.frame_id = "world";
     node_vis.header.stamp = ros::Time::now();
@@ -226,7 +230,7 @@ void visGridPath( vector<Vector3d> nodes, bool is_use_jps )
         node_vis.color.a = 1.0;
         node_vis.color.r = 0.0;
         node_vis.color.g = 1.0;
-        node_vis.color.b = 0.0;
+        node_vis.color.b = 0.5;
     }
 
 
@@ -245,6 +249,7 @@ void visGridPath( vector<Vector3d> nodes, bool is_use_jps )
         node_vis.points.push_back(pt);
     }
 
+    ROS_INFO("node on path vis done. path node size: %d" , node_vis.points.size());
     _grid_path_vis_pub.publish(node_vis);
 }
 
@@ -281,6 +286,6 @@ void visVisitedNode( vector<Vector3d> nodes )
 
         node_vis.points.push_back(pt);
     }
-
+    ROS_INFO("Total node to be vis is: %d ", node_vis.points.size() );
     _visited_nodes_vis_pub.publish(node_vis);
 }

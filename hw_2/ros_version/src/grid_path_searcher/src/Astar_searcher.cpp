@@ -154,7 +154,7 @@ inline void AstarPathFinder::AstarGetSucc(GridNodePtr currentPtr, vector<GridNod
    std::vector<int> y_dir = {1, 0, -1};
    std::vector<int> z_dir = {1, 0, -1};
 //  mark this node as closd.
-    currentPtr->id = -1;
+    //currentPtr->id = -1;
     
    for (auto x_d: x_dir) {
        for(auto y_d: y_dir) {
@@ -172,16 +172,16 @@ inline void AstarPathFinder::AstarGetSucc(GridNodePtr currentPtr, vector<GridNod
                         
                         auto n_ptr = GridNodeMap[nx_idx][ny_idx][nz_idx];
 
-                       
-                       n_ptr->cameFrom = currentPtr;
+                       assert(n_ptr != currentPtr);
                         neighborPtrSets.push_back(n_ptr);
                        // same edgeCost computation method as jps do
                        auto neighborIdx = n_ptr->index;
+                       
                         edgeCostSets.push_back(
                             sqrt(
                             (neighborIdx(0) - currentPtr->index(0)) * (neighborIdx(0) - currentPtr->index(0)) +
                             (neighborIdx(1) - currentPtr->index(1)) * (neighborIdx(1) - currentPtr->index(1)) +
-                            (neighborIdx(2) - currentPtr->index(2)) * (neighborIdx(2) - currentPtr->index(2))   ) 
+                            (neighborIdx(2) - currentPtr->index(2)) * (neighborIdx(2) - currentPtr->index(2)) ) 
                             );
                         // update gn and hn outside of the method.
                         //n_ptr->gn = currentPtr->gn + getEuclidean(currentPtr, n_ptr);
@@ -220,13 +220,14 @@ double AstarPathFinder::getHeu(GridNodePtr node1, GridNodePtr node2)
     *
     */
 
-    return getEuclidean(node1, node2);
+    return getEuclideanIndex(node1, node2);
 }
 
-double AstarPathFinder::getDiagonalHeu(GridNodePtr start, GridNodePtr end) {
+double AstarPathFinder::getDiagonalHeuxxxxxx(GridNodePtr start, GridNodePtr end) {
     // firstly find the maximum cute in the 3d space between start and end
     // then the max square
     // finally the coord diff
+    ROS_INFO("Entering a star diagonalHeu. xxxxxxxxxxxxxxxxx");
 
     double x_diff = end->coord(0) - start->coord(0);
     double y_diff = end->coord(1) - start->coord(1);
@@ -241,8 +242,8 @@ double AstarPathFinder::getDiagonalHeu(GridNodePtr start, GridNodePtr end) {
 
     double heu1 = sqrt(pow(tmp1,2) * 3);
     diff.erase(std::remove(diff.begin(), diff.end(), tmp1), diff.end());
-    assert(diff.size() == 2);
-
+    //assert(diff.size() == 2);
+    assert(false);
     double tmp2 = *std::min_element(std::begin(diff), std::end(diff));
     double heu2 = sqrt(pow(tmp2,2) * 2);
 
@@ -256,8 +257,19 @@ double AstarPathFinder::getDiagonalHeu(GridNodePtr start, GridNodePtr end) {
 
 }
 
+double AstarPathFinder::getEuclideanIndex(GridNodePtr start, GridNodePtr end) {
+    ROS_INFO("Entering get euclidean by index.");
+    auto start_idx = start->index;
+    return sqrt(
+        (start_idx(0) - end->index(0)) * (start_idx(0) - end->index(0)) +
+        (start_idx(1) - end->index(1)) * (start_idx(1) - end->index(1)) +
+        (start_idx(2) - end->index(2)) * (start_idx(2) - end->index(2)) );
+
+}
+
 double AstarPathFinder::getEuclidean(GridNodePtr start, GridNodePtr end) {
     // square_root( square_diff_x  + square_diff_y + square_diff_z )
+    ROS_DEBUG("Entering euclidean heu computation.");
     return sqrt( pow((end->coord(0) - start->coord(0)),2) 
                 + pow((end->coord(1) - start->coord(1)),2) 
                 + pow((end->coord(2) - start->coord(2)),2));
@@ -297,6 +309,7 @@ void AstarPathFinder::AstarGraphSearch(Vector3d start_pt, Vector3d end_pt)
     //put start node in open set
     startPtr -> gScore = 0;
     startPtr -> fScore = getHeu(startPtr,endPtr);   
+    startPtr->cameFrom = NULL;
     //STEP 1: finish the AstarPathFinder::getHeu , which is the heuristic function
     startPtr -> id = 1; 
     startPtr -> coord = start_pt;
@@ -311,6 +324,7 @@ void AstarPathFinder::AstarGraphSearch(Vector3d start_pt, Vector3d end_pt)
     vector<GridNodePtr> neighborPtrSets;
     vector<double> edgeCostSets;
 
+    int total_released_node = 0;
     // this is the main loop
     while ( !openSet.empty() ){
         /*
@@ -328,20 +342,25 @@ void AstarPathFinder::AstarGraphSearch(Vector3d start_pt, Vector3d end_pt)
        //  remove this node from the openSet, change it's id to -1.
        //openSet.erase(item_itr, openSet.end());
        item_itr->second-> id  = -1;
+       //ROS_INFO("Before remove the begin node, size of open is:%d", openSet.size());
        openSet.erase(item_itr);
-
+       total_released_node ++;
+        //ROS_DEBUG("after remove the begin node, size of open is:%d", openSet.size());
        currentPtr = (item_itr->second);
 
         // if the current node is the goal 
         if( currentPtr->index == goalIdx ){
             ros::Time time_2 = ros::Time::now();
             terminatePtr = currentPtr;
+            assert(terminatePtr->cameFrom != NULL);
+            assert(terminatePtr->cameFrom != terminatePtr);
+
             ROS_WARN("[A*]{sucess}  Time in A*  is %f ms, path cost if %f m", (time_2 - time_1).toSec() * 1000.0, currentPtr->gScore * resolution );            
             return;
         }
         //get the successors.
         AstarGetSucc(currentPtr, neighborPtrSets, edgeCostSets);  //STEP 4: finish AstarPathFinder::AstarGetSucc yourself     
-
+        ROS_INFO_STREAM("ALL neighbor size is: " << neighborPtrSets.size() << "\n");
         /*
         *
         *
@@ -362,6 +381,7 @@ void AstarPathFinder::AstarGraphSearch(Vector3d start_pt, Vector3d end_pt)
             *        
             */
             neighborPtr = neighborPtrSets[i];
+            auto neighborCost = edgeCostSets[i];
             if(neighborPtr -> id == 0){ //discover a new node, which is not in the closed set and open set
                 /*
                 *
@@ -370,11 +390,11 @@ void AstarPathFinder::AstarGraphSearch(Vector3d start_pt, Vector3d end_pt)
                 please write your code below
                 *        
                 */
-                neighborPtr -> gScore = currentPtr->gScore  + edgeCostSets[i];
+                neighborPtr -> gScore = currentPtr->gScore  + neighborCost;
                 auto heu_score = getHeu(neighborPtr, endPtr);
                 neighborPtr -> fScore = neighborPtr-> gScore + heu_score;
     
-
+                neighborPtr->cameFrom = currentPtr;
                 neighborPtr -> id = 1; 
                 //startPtr -> coord = start_pt;
                 openSet.insert( make_pair(neighborPtr -> fScore, neighborPtr) );
@@ -389,10 +409,38 @@ void AstarPathFinder::AstarGraphSearch(Vector3d start_pt, Vector3d end_pt)
                 please write your code below
                 *        
                 */
-               if ((currentPtr->gScore + edgeCostSets[i] ) < neighborPtr->gScore) {
-                    neighborPtr->gScore = currentPtr->gScore + edgeCostSets[i];
+               if ((currentPtr->gScore + neighborCost ) < neighborPtr->gScore) {
+
+                    neighborPtr->gScore = currentPtr->gScore + neighborCost;
+                    // update neighborPtr in openSet.
+                    auto p_iter = openSet.equal_range(neighborPtr->fScore);
+
+                    // remove from the openSet, as we will update the fScore.
+                    bool find = false;
+                    for(auto it = p_iter.first; it != p_iter.second; it++) {
+                        //assert(it->second->index != nullptr);
+                        //assert(neighborPtr->index != nullptr);
+
+                        if ( (it->second->index -  neighborPtr->index).norm() == 0 ) {
+                            // this is the target `neighbor` GridNodePtr  in the multimap.
+                            openSet.erase(it);
+                            find  = true;
+                            break;
+                        } 
+                    }
+
+                    if (!find) {
+                       
+                        ROS_INFO("the neighbor is not in open set while it's id equal to 1 ;");
+                        
+                    }
+                    
+                    neighborPtr->fScore = neighborPtr->gScore + getHeu(neighborPtr , endPtr);
                     // update parrent-children linke
                     neighborPtr->cameFrom = currentPtr;
+                    openSet.insert(make_pair(neighborPtr->fScore, neighborPtr));
+                    
+
                }
                
                 continue;
@@ -408,14 +456,39 @@ void AstarPathFinder::AstarGraphSearch(Vector3d start_pt, Vector3d end_pt)
             }
         }      
     }
+    ROS_INFO("There are total %d node being expanded.", total_released_node);
     //if search fails
     ros::Time time_2 = ros::Time::now();
     if((time_2 - time_1).toSec() > 0.1)
         ROS_WARN("Time consume in Astar path finding is %f", (time_2 - time_1).toSec() );
 }
 
+  
 
-vector<Vector3d> AstarPathFinder::getPath() 
+bool AstarPathFinder::hasCircle(GridNodePtr end_ptr, GridNodePtr* c_point) {
+    GridNodePtr fast = NULL;
+    GridNodePtr slow = NULL;
+    if (end_ptr == NULL) {
+        return false;
+    } else {
+        slow = end_ptr;
+        fast = end_ptr->cameFrom;
+        while(fast != NULL && fast != slow) {
+            slow = slow->cameFrom;
+            fast = fast->cameFrom;
+            if (fast != NULL)
+                fast = fast->cameFrom;
+        }
+        if( fast != NULL && fast == slow) {
+            *c_point = slow;
+            return true;
+        }
+        return false;
+    }
+
+}
+
+vector<Vector3d> AstarPathFinder::getPath(Vector3d start) 
 {   
     vector<Vector3d> path;
     vector<GridNodePtr> gridPath;
@@ -426,12 +499,40 @@ vector<Vector3d> AstarPathFinder::getPath()
     please write your code below
     *      
     */
+   GridNodePtr c_point;
+   bool hasc =  hasCircle(terminatePtr, &c_point);
+   if(hasc) {
+       ROS_INFO("there is circle in the visited(closed) node link");
+       // add to path until met the c_point;
+       GridNodePtr cur = terminatePtr;
+       while(cur != c_point) {
+           path.push_back(cur->coord);
+           cur = cur->cameFrom;
+       }
+       ROS_INFO("There are total %d nodes in path: ", path.size()) ;
+       
+       return path;
+   }
 
    if(terminatePtr != NULL) {
+       std::cout  << "TerminatePtr index(x,y,z): " 
+        << terminatePtr->index(0) 
+        << terminatePtr->index(1) 
+        << terminatePtr->index(2)         
+        << endl;
        GridNodePtr curr = terminatePtr; 
+       int no = 1;
        while(curr != NULL) {
            gridPath.push_back(curr);
+           //assert(curr != curr->cameFrom);
            curr = curr->cameFrom;
+           
+           
+           if (no > 40000) 
+            break;
+           no += 1;
+           //curr = curr->cameFrom;
+           
        }
        
    }

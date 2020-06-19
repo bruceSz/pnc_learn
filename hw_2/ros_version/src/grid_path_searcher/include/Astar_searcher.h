@@ -23,7 +23,7 @@ class AstarPathFinder
 		double gl_xl, gl_yl, gl_zl;
 		double gl_xu, gl_yu, gl_zu;
 
-		GridNodePtr terminatePtr;
+		GridNodePtr terminatePtr = NULL;
 		std::multimap<double, GridNodePtr> openSet;
 
 		double getHeu(GridNodePtr node1, GridNodePtr node2);
@@ -48,13 +48,16 @@ class AstarPathFinder
 		void setObs(const double coord_x, const double coord_y, const double coord_z);
 
 		Eigen::Vector3d coordRounding(const Eigen::Vector3d & coord);
-		std::vector<Eigen::Vector3d> getPath();
+		std::vector<Eigen::Vector3d> getPath(Eigen::Vector3d start_pt);
 		std::vector<Eigen::Vector3d> getVisitedNodes();
 
 	private:
 		double getManhattanHeu(GridNodePtr start, GridNodePtr end) ;
-		double getDiagonalHeu(GridNodePtr start, GridNodePtr end);
+		double getDiagonalHeuxxxxxx(GridNodePtr start, GridNodePtr end);
+		double getEuclideanIndex(GridNodePtr start, GridNodePtr end);
 		double getEuclidean(GridNodePtr start, GridNodePtr end);
+
+		bool hasCircle(GridNodePtr end_ptr,GridNodePtr* c_point);
 };
 
 #endif
