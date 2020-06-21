@@ -223,37 +223,60 @@ double AstarPathFinder::getHeu(GridNodePtr node1, GridNodePtr node2)
     return getEuclideanIndex(node1, node2);
 }
 
+//TODO refactor this func, it use a copy-style  parameter
+double AstarPathFinder::computeDiagonalDistance(vector<double> arr) {
+    if (arr.size() == 0)
+        return 0.0;
+    if (arr.size() == 1)
+        return arr[0];
+
+    double tmp = *(std::min_element(arr.begin(), arr.end()));
+    double dim = arr.size();
+    double diagonal_dis = sqrt(tmp*tmp * dim);
+
+    arr.erase(std::remove(arr.begin(), arr.end(), tmp), arr.end());
+    return diagonal_dis + computeDiagonalDistance(arr);
+
+}
+
 double AstarPathFinder::getDiagonalHeuxxxxxx(GridNodePtr start, GridNodePtr end) {
     // firstly find the maximum cute in the 3d space between start and end
     // then the max square
     // finally the coord diff
     ROS_INFO("Entering a star diagonalHeu. xxxxxxxxxxxxxxxxx");
 
-    double x_diff = end->coord(0) - start->coord(0);
-    double y_diff = end->coord(1) - start->coord(1);
-    double z_diff = end->coord(2) - start->coord(2);
+    double x_diff = end->index(0) - start->index(0);
+    double y_diff = end->index(1) - start->index(1);
+    double z_diff = end->index(2) - start->index(2);
 
     std::vector<double> diff;
     diff.push_back(x_diff);
     diff.push_back(y_diff);
     diff.push_back(z_diff);
 
-    double tmp1 = *std::min_element(diff.begin(), diff.end());
+    return computeDiagonalDistance(diff);
+
+    /*double tmp1 = *std::min_element(diff.begin(), diff.end());
 
     double heu1 = sqrt(pow(tmp1,2) * 3);
+    
     diff.erase(std::remove(diff.begin(), diff.end(), tmp1), diff.end());
-    //assert(diff.size() == 2);
-    assert(false);
+    if (diff.size() )
+    assert(diff.size() == 2);
+    
     double tmp2 = *std::min_element(std::begin(diff), std::end(diff));
     double heu2 = sqrt(pow(tmp2,2) * 2);
 
     diff.erase(std::remove(diff.begin(), diff.end(), tmp2), diff.end());
 
+    if(diff.size() != 1) {
+        cerr << " diff size is : " << diff.size() << std::endl;
+    }
     assert(diff.size() ==1);
 
     double heu3 = diff[0];
     
-    return heu1 + heu2 + heu3;
+    return heu1 + heu2 + heu3;*/
 
 }
 
@@ -277,15 +300,16 @@ double AstarPathFinder::getEuclidean(GridNodePtr start, GridNodePtr end) {
 
 double AstarPathFinder::getManhattanHeu(GridNodePtr start, GridNodePtr end) {
     // abs_diff_x + abs_diff_y + abs_diff_z
-    return fabs(end->coord(0) - start->coord(0)) +
-            fabs(end->coord(1) - start->coord(1)) +
-             fabs(end->coord(2) - start->coord(2));
+    return fabs(end->index(0) - start->index(0)) +
+           fabs(end->index(1) - start->index(1)) +
+           fabs(end->index(2) - start->index(2));
 
 }
 
 void AstarPathFinder::AstarGraphSearch(Vector3d start_pt, Vector3d end_pt)
 {   
     ros::Time time_1 = ros::Time::now();    
+    double delta = sqrt(3);
 
     //index of start_point and end_point
     Vector3i start_idx = coord2gridIndex(start_pt);
@@ -339,6 +363,28 @@ void AstarPathFinder::AstarGraphSearch(Vector3d start_pt, Vector3d end_pt)
         *
         */
        auto item_itr = openSet.begin();
+       
+       // do tie break or not
+       if(true) {
+            // for all nodes with same fScore and a small score to it to break the `tie`.
+            auto pair_iter = openSet.equal_range(item_itr->second->fScore);
+            
+            int no_same_f = 0;
+            for(auto it = pair_iter.first; it != pair_iter.second;it++) {
+                if( it != item_itr) {
+                    ROS_INFO("change the fScore of %d node with same fscore as the first one did." , no_same_f);
+                    it->second->fScore = it->second->fScore + delta;
+                }    
+
+                no_same_f ++;
+            }
+            if(no_same_f > 1)
+                ROS_INFO("There total %d node with same fScore.", no_same_f);
+
+       }
+       
+       
+       //
        //  remove this node from the openSet, change it's id to -1.
        //openSet.erase(item_itr, openSet.end());
        item_itr->second-> id  = -1;

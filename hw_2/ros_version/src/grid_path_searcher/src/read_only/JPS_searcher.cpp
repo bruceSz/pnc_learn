@@ -82,6 +82,7 @@ bool JPSPathFinder::jump(const Vector3i & curIdx, const Vector3i & expDir, Vecto
     return jump(neiIdx, expDir, neiIdx);
 }
 
+// the dir here is where the current idx come from.
 inline bool JPSPathFinder::hasForced(const Vector3i & idx, const Vector3i & dir)
 {
     int norm1 = abs(dir(0)) + abs(dir(1)) + abs(dir(2));
@@ -156,6 +157,7 @@ void JPSPathFinder::JPSGraphSearch(Eigen::Vector3d start_pt, Eigen::Vector3d end
     Vector3i start_idx = coord2gridIndex(start_pt);
     Vector3i end_idx   = coord2gridIndex(end_pt);
     goalIdx = end_idx;
+    double delta = sqrt(3);
 
     //position of start_point and end_point
     start_pt = gridIndex2coord(start_idx);
@@ -174,6 +176,7 @@ void JPSPathFinder::JPSGraphSearch(Eigen::Vector3d start_pt, Eigen::Vector3d end
     //put start node in open set
     startPtr -> gScore = 0;
     startPtr -> fScore = getHeu(startPtr,endPtr);   
+    startPtr -> cameFrom = NULL;
     //STEP 1: finish the AstarPathFinder::getHeu , which is the heuristic function
     startPtr -> id = 1; 
     startPtr -> coord = start_pt;
@@ -202,6 +205,37 @@ void JPSPathFinder::JPSGraphSearch(Eigen::Vector3d start_pt, Eigen::Vector3d end
         *
         *
         */
+        auto item_itr = openSet.begin();
+
+       // do tie break or not copy from astar_seacher.
+       if(true) {
+            // for all nodes with same fScore and a small score to it to break the `tie`.
+            auto pair_iter = openSet.equal_range(item_itr->second->fScore);
+            
+            int no_same_f = 0;
+            for(auto it = pair_iter.first; it != pair_iter.second;it++) {
+                if( it != item_itr) {
+                    ROS_INFO("change the fScore of %d node with same fscore as the first one did." , no_same_f);
+                    it->second->fScore = it->second->fScore + delta;
+                }    
+
+                no_same_f ++;
+            }
+            if(no_same_f > 1)
+                ROS_INFO("There total %d node with same fScore.", no_same_f);
+
+       } 
+
+        //
+       //  remove this node from the openSet, change it's id to -1.
+       //openSet.erase(item_itr, openSet.end());
+       item_itr->second-> id  = -1;
+       //ROS_INFO("Before remove the begin node, size of open is:%d", openSet.size());
+       openSet.erase(item_itr);
+       
+        //ROS_DEBUG("after remove the begin node, size of open is:%d", openSet.size());
+       currentPtr = (item_itr->second);
+
 
         // if the current node is the goal 
         if( currentPtr->index == goalIdx ){
@@ -212,6 +246,7 @@ void JPSPathFinder::JPSGraphSearch(Eigen::Vector3d start_pt, Eigen::Vector3d end
         }
         //get the succetion
         JPSGetSucc(currentPtr, neighborPtrSets, edgeCostSets); //we have done it for you
+         ROS_INFO_STREAM("ALL neighbor size is: " << neighborPtrSets.size() << "\n");
         
         /*
         *
@@ -232,6 +267,9 @@ void JPSPathFinder::JPSGraphSearch(Eigen::Vector3d start_pt, Eigen::Vector3d end
             neighborPtrSets[i]->id = 1 : expanded, equal to this node is in close set
             *        
             */
+           neighborPtr = neighborPtrSets[i];
+            auto neighborCost = edgeCostSets[i];
+            tentative_gScore = neighborCost + currentPtr->gScore;
             if(neighborPtr -> id != 1){ //discover a new node
                 /*
                 *
@@ -240,7 +278,16 @@ void JPSPathFinder::JPSGraphSearch(Eigen::Vector3d start_pt, Eigen::Vector3d end
                 please write your code below
                 *        
                 */
+               neighborPtr -> gScore = currentPtr->gScore  + neighborCost;
+                auto heu_score = getHeu(neighborPtr, endPtr);
+                neighborPtr -> fScore = neighborPtr-> gScore + heu_score;
+    
+                neighborPtr->cameFrom = currentPtr;
+                neighborPtr -> id = 1; 
+                //startPtr -> coord = start_pt;
+                openSet.insert( make_pair(neighborPtr -> fScore, neighborPtr) );
                 continue;
+                
             }
             else if(tentative_gScore <= neighborPtr-> gScore){ //in open set and need update
                 /*
@@ -250,6 +297,34 @@ void JPSPathFinder::JPSGraphSearch(Eigen::Vector3d start_pt, Eigen::Vector3d end
                 please write your code below
                 *        
                 */
+                neighborPtr->gScore = tentative_gScore;
+
+                auto p_iter = openSet.equal_range(neighborPtr->fScore);
+
+                    // remove from the openSet, as we will update the fScore.
+                    bool find = false;
+                    for(auto it = p_iter.first; it != p_iter.second; it++) {
+                        //assert(it->second->index != nullptr);
+                        //assert(neighborPtr->index != nullptr);
+                        // find  iterator of the current neighborPtr.
+                        if ( (it->second->index -  neighborPtr->index).norm() == 0 ) {
+                            // this is the target `neighbor` GridNodePtr  in the multimap.
+                            openSet.erase(it);
+                            find  = true;
+                            break;
+                        } 
+                    }
+
+                    if (!find) {
+                       
+                        ROS_INFO("the neighbor is not in open set while it's id equal to 1 ;");
+                        
+                    }
+                    
+                    neighborPtr->fScore = neighborPtr->gScore + getHeu(neighborPtr , endPtr);
+                    // update parrent-children linke
+                    neighborPtr->cameFrom = currentPtr;
+                    openSet.insert(make_pair(neighborPtr->fScore, neighborPtr));
 
 
                 // if change its parents, update the expanding direction 

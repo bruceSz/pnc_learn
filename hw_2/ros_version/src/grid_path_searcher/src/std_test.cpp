@@ -22,6 +22,29 @@ int vec_rm() {
 
     return 0;
 }
+template<class T>
+void printV(const std::vector<T>& arr) {
+    for(auto da: arr) {
+        cout << "da_item: " << da << " " ;
+    }
+    cout << endl;
+}
+
+double computeDiagonalDistance(vector<double> arr) {
+    if (arr.size() == 0)
+        return 0.0;
+    if (arr.size() == 1)
+        return arr[0];
+
+    double tmp = *(std::min_element(arr.begin(), arr.end()));
+    double dim = arr.size();
+    double diagonal_dis = sqrt(pow(tmp,2) * dim);
+
+    arr.erase(std::remove(arr.begin(), arr.end(), tmp), arr.end());
+    return diagonal_dis + computeDiagonalDistance(arr);
+
+}
+
 
 void multi_map() {
      // initialize container 
@@ -83,9 +106,18 @@ void multi_map() {
 
 
 
+    std::vector<double> testn;
+    testn.push_back(1);
+    testn.push_back(1);
+    testn.push_back(1);
 
-    return ; 
+
+    printV(testn);
+
+    double dis = computeDiagonalDistance(testn);
+    std::cout << "dis is : " << dis << "sqrt of 3 is: " << sqrt(3) << std::endl;
 }
+
 
 
 

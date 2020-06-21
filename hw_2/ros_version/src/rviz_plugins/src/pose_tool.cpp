@@ -155,6 +155,7 @@ int Pose3DTool::processMouseEvent( ViewportMouseEvent& event )
       for (int k = 0; k < arrow_array.size(); k++)
         delete arrow_array[k];
       arrow_array.clear();
+      ROS_INFO("Get from rviz: %f, %f, %f", pos_.x, pos_.y, pos_.z);
       onPoseSet(pos_.x, pos_.y, pos_.z, prevangle);
       flags |= (Finished|Render);
     }

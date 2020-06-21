@@ -127,14 +127,14 @@ void pathFinding(const Vector3d start_pt, const Vector3d target_pt)
     //_use_jps = 0 -> Do not use JPS
     //_use_jps = 1 -> Use JPS
     //you just need to change the #define value of _use_jps
-#define _use_jps 0
+#define _use_jps 1
 #if _use_jps
     {
         //Call JPS to search for a path
         _jps_path_finder -> JPSGraphSearch(start_pt, target_pt);
 
         //Retrieve the path
-        auto grid_path     = _jps_path_finder->getPath();
+        auto grid_path     = _jps_path_finder->getPath(start_pt);
         auto visited_nodes = _jps_path_finder->getVisitedNodes();
 
         //Visualize the result

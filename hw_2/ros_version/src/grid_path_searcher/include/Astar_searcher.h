@@ -27,6 +27,10 @@ class AstarPathFinder
 		std::multimap<double, GridNodePtr> openSet;
 
 		double getHeu(GridNodePtr node1, GridNodePtr node2);
+		double getManhattanHeu(GridNodePtr start, GridNodePtr end) ;
+		double getDiagonalHeuxxxxxx(GridNodePtr start, GridNodePtr end);
+		double getEuclideanIndex(GridNodePtr start, GridNodePtr end);
+		double getEuclidean(GridNodePtr start, GridNodePtr end);
 		void AstarGetSucc(GridNodePtr currentPtr, std::vector<GridNodePtr> & neighborPtrSets, std::vector<double> & edgeCostSets);		
 
     	bool isOccupied(const int & idx_x, const int & idx_y, const int & idx_z) const;
@@ -52,12 +56,10 @@ class AstarPathFinder
 		std::vector<Eigen::Vector3d> getVisitedNodes();
 
 	private:
-		double getManhattanHeu(GridNodePtr start, GridNodePtr end) ;
-		double getDiagonalHeuxxxxxx(GridNodePtr start, GridNodePtr end);
-		double getEuclideanIndex(GridNodePtr start, GridNodePtr end);
-		double getEuclidean(GridNodePtr start, GridNodePtr end);
+		
 
 		bool hasCircle(GridNodePtr end_ptr,GridNodePtr* c_point);
+		double computeDiagonalDistance(std::vector<double> arr);
 };
 
 #endif

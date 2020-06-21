@@ -62,7 +62,7 @@ void Goal3DTool::updateTopic()
 
 void Goal3DTool::onPoseSet(double x, double y, double z, double theta)
 {
-  ROS_WARN("3D Goal Set");
+  ROS_WARN("3D Goal Set with %f, %f, %f, %f", x, y, z, theta);
   std::string fixed_frame = context_->getFixedFrame().toStdString();
   tf::Quaternion quat;
   quat.setRPY(0.0, 0.0, theta);
