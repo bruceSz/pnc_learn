@@ -24,6 +24,7 @@
 #include <ompl/base/objectives/PathLengthOptimizationObjective.h>
 #include <ompl/geometric/planners/rrt/RRTstar.h>
 #include <ompl/geometric/SimpleSetup.h>
+#include <ompl/geometric/planners/rrt/RRT.h>
 
 #include "graph_searcher.h"
 #include "backward.hpp"
@@ -33,6 +34,7 @@ using namespace Eigen;
 
 namespace ob = ompl::base;
 namespace og = ompl::geometric;
+
 
 namespace backward {
 backward::SignalHandling sh;
@@ -128,6 +130,8 @@ public:
         // example, so we downcast state into the specific type.
         const ob::RealVectorStateSpace::StateType* state3D =
             state->as<ob::RealVectorStateSpace::StateType>();
+
+        //const auto *pos = state3D->as<ob::RealVectorStateSpace::StateType>(0);
         /**
         *
         *
@@ -136,7 +140,7 @@ public:
         *
         */
 
-        return _RRTstar_preparatory->isObsFree(x, y, z);
+        return _RRTstar_preparatory->isObsFree((*state3D)[0], (*state3D)[1], (*state3D)[2]);
     }
 };
 
@@ -161,6 +165,8 @@ void pathFinding(const Vector3d start_pt, const Vector3d target_pt)
     // Construct the robot state space in which we're planning. 
     ob::StateSpacePtr space(new ob::RealVectorStateSpace(3));
 
+     
+
     // Set the bounds of space to be in [0,1].
     ob::RealVectorBounds bounds(3);
     bounds.setLow(0, - _x_size * 0.5);
@@ -172,14 +178,32 @@ void pathFinding(const Vector3d start_pt, const Vector3d target_pt)
     bounds.setHigh(2, _z_size);
 
     space->as<ob::RealVectorStateSpace>()->setBounds(bounds);
+
+
+    og::SimpleSetup ss(space);
+
     // Construct a space information instance for this state space
-    ob::SpaceInformationPtr si(new ob::SpaceInformation(space));
+    // this is done in simpleSetup.
+    //ob::SpaceInformationPtr si(new ob::SpaceInformation(space));
+    ss.setStateValidityChecker(ob::StateValidityCheckerPtr(new ValidityChecker(ss.getSpaceInformation())));
+
     // Set the object used to check which states in the space are valid
-    si->setStateValidityChecker(ob::StateValidityCheckerPtr(new ValidityChecker(si)));
-    si->setup();
+    // change to use the SimpleSetup.
+
+    //si->setStateValidityChecker(ob::StateValidityCheckerPtr(new ValidityChecker(si)));
+
+    auto planner(std::make_shared<og::RRT>(ss.getSpaceInformation()));
+    ss.setPlanner(planner);
+
+   // si->setup();
 
     // Set our robot's starting state
     ob::ScopedState<> start(space);
+    start[0]= start_pt[0];
+    start[0]= start_pt[0];
+    start[0]= start_pt[0];
+
+
     /**
     *
     *
@@ -190,6 +214,9 @@ void pathFinding(const Vector3d start_pt, const Vector3d target_pt)
 
     // Set our robot's goal state
     ob::ScopedState<> goal(space);
+    goal[0]= target_pt[0];
+    goal[0]= target_pt[0];
+    goal[0]= target_pt[0];
     /**
     *
     *
@@ -210,7 +237,7 @@ void pathFinding(const Vector3d start_pt, const Vector3d target_pt)
     */
 
     // Set the start and goal states
-    pdef->setStartAndGoalStates(start, goal);
+    ss.setStartAndGoalStates(start, goal);
 
     // Set the optimization objective
     /**
@@ -233,24 +260,27 @@ void pathFinding(const Vector3d start_pt, const Vector3d target_pt)
     */ 
 
     // Set the problem instance for our planner to solve
-    optimizingPlanner->setProblemDefinition(pdef);
-    optimizingPlanner->setup();
+    //optimizingPlanner->setProblemDefinition(pdef);
+    ss.setup();
 
     // attempt to solve the planning problem within one second of
     // planning time
-    ob::PlannerStatus solved = optimizingPlanner->solve(1.0);
+    ob::PlannerStatus solved = ss.solve(1.0);
 
     if (solved)
     {
         // get the goal representation from the problem definition (not the same as the goal state)
         // and inquire about the found path
-        og::PathGeometric* path = pdef->getSolutionPath()->as<og::PathGeometric>();
+        og::PathGeometric path = ss.getSolutionPath();
+        std::cout << "before print out " << std::endl;
+        ss.getSolutionPath().print(std::cout);
+        std::cout << "after print out. " << std::endl;
         
         vector<Vector3d> path_points;
 
-        for (size_t path_idx = 0; path_idx < path->getStateCount (); path_idx++)
+        for (size_t path_idx = 0; path_idx < path.getStateCount (); path_idx++)
         {
-            const ob::RealVectorStateSpace::StateType *state = path->getState(path_idx)->as<ob::RealVectorStateSpace::StateType>(); 
+            const ob::RealVectorStateSpace::StateType *state = path.getState(path_idx)->as<ob::RealVectorStateSpace::StateType>(); 
             /**
             *
             *
@@ -258,6 +288,11 @@ void pathFinding(const Vector3d start_pt, const Vector3d target_pt)
             *
             *
             */ 
+           auto x = (*state)[0];
+           auto y = (*state)[1];
+           auto z = (*state)[2];
+           Vector3d tmp_pt(x, y, z);
+           path_points.push_back(tmp_pt);
         }
         visRRTstarPath(path_points);       
     }
