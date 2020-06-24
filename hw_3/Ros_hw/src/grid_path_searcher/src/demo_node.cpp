@@ -25,6 +25,7 @@
 #include <ompl/geometric/planners/rrt/RRTstar.h>
 #include <ompl/geometric/SimpleSetup.h>
 #include <ompl/geometric/planners/rrt/RRT.h>
+#include <ompl/geometric/planners/rrt/InformedRRTstar.h>
 
 #include "graph_searcher.h"
 #include "backward.hpp"
@@ -192,7 +193,9 @@ void pathFinding(const Vector3d start_pt, const Vector3d target_pt)
 
     //si->setStateValidityChecker(ob::StateValidityCheckerPtr(new ValidityChecker(si)));
 
-    auto planner(std::make_shared<og::RRT>(ss.getSpaceInformation()));
+    //1, auto planner(std::make_shared<og::RRT>(ss.getSpaceInformation()));
+    auto planner(std::make_shared<og::RRTstar>(ss.getSpaceInformation()));
+    //3, auto planner(std::make_shared<og::InformedRRTstar>(ss.getSpaceInformation()));
     ss.setPlanner(planner);
 
    // si->setup();
@@ -200,8 +203,8 @@ void pathFinding(const Vector3d start_pt, const Vector3d target_pt)
     // Set our robot's starting state
     ob::ScopedState<> start(space);
     start[0]= start_pt[0];
-    start[0]= start_pt[0];
-    start[0]= start_pt[0];
+    start[1]= start_pt[1];
+    start[2]= start_pt[2];
 
 
     /**
@@ -215,8 +218,8 @@ void pathFinding(const Vector3d start_pt, const Vector3d target_pt)
     // Set our robot's goal state
     ob::ScopedState<> goal(space);
     goal[0]= target_pt[0];
-    goal[0]= target_pt[0];
-    goal[0]= target_pt[0];
+    goal[1]= target_pt[1];
+    goal[2]= target_pt[2];
     /**
     *
     *
@@ -238,6 +241,7 @@ void pathFinding(const Vector3d start_pt, const Vector3d target_pt)
 
     // Set the start and goal states
     ss.setStartAndGoalStates(start, goal);
+    ROS_INFO("start is: %d, %d, %d"  , start[0], start[1], start[2]);
 
     // Set the optimization objective
     /**
