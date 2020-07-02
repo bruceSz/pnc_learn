@@ -30,7 +30,7 @@ hold on
 plot(x_I, y_I, 'ro', 'MarkerSize',10, 'MarkerFaceColor','r');
 plot(x_G, y_G, 'go', 'MarkerSize',10, 'MarkerFaceColor','g');% 绘制起点和目标点
 count=1;
-total_iter = 600;
+total_iter = 60;
 
 %Snapshot cost:  Met node around goal with iter: 283
 
@@ -38,9 +38,9 @@ for iter = 1:total_iter
     x_rand=[];
     %Step 1: 在地图中随机采样一个点x_rand
     %提示：用（x_rand(1),x_rand(2)）表示环境中采样点的坐标
-    x_rand = rand(1,2)
-    x_rand(1) = ceil(x_rand(1) * size(Imp, 1))
-    x_rand(2) = ceil(x_rand(2) * size(Imp, 2))
+    x_rand = rand(1,2);
+    x_rand(1) = ceil(x_rand(1) * size(Imp, 1));
+    x_rand(2) = ceil(x_rand(2) * size(Imp, 2));
     % nearest_node = 
     
     % x_near=[];
@@ -130,7 +130,7 @@ end
 function [nearest_nodexxx, nearest_node_idx] =findNearest(T, t_size,x, y)
     ret_n_node = T.v(1);
     node_index = 1;
-    min_distance = inf
+    min_distance = inf;
     for i = 1:t_size
         % iterate all nodes in the T and compute distance
         tmp_node = T.v(i);
@@ -138,7 +138,7 @@ function [nearest_nodexxx, nearest_node_idx] =findNearest(T, t_size,x, y)
         dis = computeDistance(x, y, tmp_node.x, tmp_node.y);
         if dis < min_distance
             min_distance = dis;
-            node_index = i
+            node_index = i;
             ret_n_node = tmp_node;
         end
     end
@@ -156,19 +156,19 @@ function new_node = try_rand_node(near_node, rand_node, threshold)
     ret = [ 0.0 0.0];
     if dis >= threshold
         % for both dx and dy , proportional to threshold/dis
-        ret(1) = near_node(1) +  (rand_node(1) - near_node(1)) * threshold / dis
-        ret(2) = near_node(2) + (rand_node(2) - near_node(2)) * threshold / dis
+        ret(1) = near_node(1) +  (rand_node(1) - near_node(1)) * threshold / dis;
+        ret(2) = near_node(2) + (rand_node(2) - near_node(2)) * threshold / dis;
     else
-        ret(1) = rand_node(1)
-        ret(2) = rand_node(2)
+        ret(1) = rand_node(1);
+        ret(2) = rand_node(2);
     end
 
-    new_node = ret
+    new_node = ret;
 
 end
 
 function distance = computeNodeDist(p1, p2)
-    distance = sqrt((p1(1)-p2(1))^2 + (p1(2)-p2(2))^2)
+    distance = sqrt((p1(1)-p2(1))^2 + (p1(2)-p2(2))^2);
 end
 
 function distance = computeDistance(x1,y1, x2, y2)

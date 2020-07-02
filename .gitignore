@@ -1,3 +1,7 @@
 **/devel
 **/build/
 **/.vscode
+**/install
+.catkin_workspace
+*.zip
+*.png
