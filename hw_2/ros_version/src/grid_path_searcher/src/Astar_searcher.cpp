@@ -220,7 +220,7 @@ double AstarPathFinder::getHeu(GridNodePtr node1, GridNodePtr node2)
     *
     */
 
-    return getEuclideanIndex(node1, node2);
+    return getDiagonalHeuxxxxxx(node1, node2);
 }
 
 //TODO refactor this func, it use a copy-style  parameter
@@ -243,7 +243,7 @@ double AstarPathFinder::getDiagonalHeuxxxxxx(GridNodePtr start, GridNodePtr end)
     // firstly find the maximum cute in the 3d space between start and end
     // then the max square
     // finally the coord diff
-    ROS_INFO("Entering a star diagonalHeu. xxxxxxxxxxxxxxxxx");
+    //ROS_INFO("Entering a star diagonalHeu. xxxxxxxxxxxxxxxxx");
 
     double x_diff = end->index(0) - start->index(0);
     double y_diff = end->index(1) - start->index(1);

@@ -194,8 +194,8 @@ void pathFinding(const Vector3d start_pt, const Vector3d target_pt)
     //si->setStateValidityChecker(ob::StateValidityCheckerPtr(new ValidityChecker(si)));
 
     //1, auto planner(std::make_shared<og::RRT>(ss.getSpaceInformation()));
-    auto planner(std::make_shared<og::RRTstar>(ss.getSpaceInformation()));
-    //3, auto planner(std::make_shared<og::InformedRRTstar>(ss.getSpaceInformation()));
+    //2, auto planner(std::make_shared<og::RRTstar>(ss.getSpaceInformation()));
+    auto planner(std::make_shared<og::InformedRRTstar>(ss.getSpaceInformation()));
     ss.setPlanner(planner);
 
    // si->setup();

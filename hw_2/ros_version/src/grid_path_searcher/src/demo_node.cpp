@@ -130,6 +130,7 @@ void pathFinding(const Vector3d start_pt, const Vector3d target_pt)
 #define _use_jps 1
 #if _use_jps
     {
+        ROS_INFO("BEGIN jps SEARCH.");
         //Call JPS to search for a path
         _jps_path_finder -> JPSGraphSearch(start_pt, target_pt);
 
