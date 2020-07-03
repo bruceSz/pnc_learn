@@ -43,6 +43,7 @@ class Homeworktool
 		double OptimalBVP(Eigen::Vector3d _start_position,Eigen::Vector3d _start_velocity,Eigen::Vector3d _target_position);
 
 		double computeRoot(std::vector<double> coefs );
+		Eigen::MatrixXd diag(Eigen::VectorXd vec, int total_step);
 };
 
 #endif
