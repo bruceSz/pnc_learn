@@ -42,7 +42,7 @@ class Homeworktool
 		Eigen::Vector3d coordRounding(const Eigen::Vector3d & coord);
 		double OptimalBVP(Eigen::Vector3d _start_position,Eigen::Vector3d _start_velocity,Eigen::Vector3d _target_position);
 
-		double computeRoot(std::vector<double> coefs );
+		std::vector<double> computeRoot(std::vector<double> coefs );
 		Eigen::MatrixXd diag(Eigen::VectorXd vec, int total_step);
 };
 

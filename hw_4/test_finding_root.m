@@ -1,7 +1,7 @@
 
 
 % roots on p
-p = [ 10 0 0 3 2];
+p =au;
 disp("size of p is :"+ size(p,2));
 roots(p);
 

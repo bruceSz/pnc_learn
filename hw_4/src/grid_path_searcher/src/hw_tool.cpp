@@ -100,6 +100,80 @@ double Homeworktool::OptimalBVP(Eigen::Vector3d _start_position,Eigen::Vector3d 
 
 
     */
+
+   // compute the coefs of poly J.
+   // compute result root of the derivate of the J.
+
+    //here the final vel is zero then delta-vel is - start_vel
+    double delta_v_x  = - _start_velocity(0);
+    double delta_v_y  = - _start_velocity(1);
+    double delta_v_z  = - _start_velocity(2);
+
+    double delta_v_x_squared = delta_v_x * delta_v_x;
+    double delta_v_y_squared = delta_v_y * delta_v_y;
+    double delta_v_z_squared = delta_v_z * delta_v_z;
+
+    double coef_4 = 1.0;
+    double coef_3 = 0.0;
+    double coef_2 = -112.0 * (delta_v_x_squared + delta_v_y_squared + delta_v_z_squared);
+
+    double delta_p_x_p = _target_position(0) - _start_position(0);
+    double delta_p_y_p = _target_position(1) - _start_position(1);
+    double delta_p_z_p = _target_position(2) - _start_position(2);
+
+
+   
+
+    double delta_p_x_p_squared = delta_p_x_p * delta_p_x_p;
+    double delta_p_y_p_squared = delta_p_y_p * delta_p_y_p;
+    double delta_p_z_p_squared = delta_p_z_p * delta_p_z_p;
+
+    double coef_1 = 144.0 * ( delta_v_x *delta_p_x_p + delta_v_y * delta_p_y_p +  delta_v_z * delta_p_z_p );
+
+    double sum_p_p_squared = delta_p_x_p_squared + delta_p_y_p_squared + delta_p_z_p_squared;
+    double coef_0 = -36 * (sum_p_p_squared);
+
+    
+
+    std::vector<double> p;
+    p.push_back(coef_4);
+    p.push_back(coef_3);
+    p.push_back(coef_2);
+    p.push_back(coef_1);
+    p.push_back(coef_0);
+
+    std::vector<double> T_vec = computeRoot(p);
+
+    std::vector<double> J;
+    // as default cost.
+    J.push_back(optimal_cost);
+
+    for(auto T: T_vec ){ // loop through four roots
+        
+         double delta_p_x = delta_p_x_p - _start_velocity(0) * T;
+         double delta_p_y = delta_p_y_p - _start_velocity(1) * T;
+         double delta_p_z = delta_p_z_p - _start_velocity(2) * T;
+
+         double delta_p_x_squared = delta_p_x * delta_p_x;
+         double delta_p_y_squared = delta_p_y * delta_p_y;
+         double delta_p_z_squared = delta_p_z * delta_p_z;
+
+        auto cost = T
+                 +  12 * (delta_p_x_squared + delta_p_y_squared + delta_p_z_squared) * std::pow(T, -3)
+                 + 4 * (delta_v_z_squared + delta_v_y_squared + delta_v_z_squared) * std::pow(T, -1)
+                 + 72 * (delta_v_x * delta_p_x + delta_v_y * delta_p_y  + delta_v_z * delta_p_z) * std::pow(T, -2);
+                     
+        std::cout << "cost is : " << cost << std::endl;
+        J.push_back(cost);
+
+    }
+
+    double min_cost = *min_element(J.begin(), J.end());
+    ROS_INFO("Optimal cost is: %f\n", min_cost);
+    return min_cost;
+
+
+
     return optimal_cost;
 }
 
@@ -151,7 +225,9 @@ Eigen::MatrixXd Homeworktool::diag(Eigen::VectorXd vec, int total_step) {
     return old;
 }
 
-double Homeworktool::computeRoot(std::vector<double> coefs ) {
+// refer: https://blog.csdn.net/fb_941219/article/details/102991181
+std::vector<double> Homeworktool::computeRoot(std::vector<double> coefs ) {
+    //double optimal_cost = 100000.;
 
     int total = coefs.size();
     //coefs[0] is the highest order of the poly.
@@ -174,20 +250,32 @@ double Homeworktool::computeRoot(std::vector<double> coefs ) {
 
     Eigen::MatrixXd res =  diag(diag_ones, -1);
 
-    std::cout << "After create diagonal." 
-        << " the res is:" << res
-        << std::endl;
+    //std::cout << "After create diagonal." 
+    //    << " the res is:" << res
+    //    << std::endl;
     
     assert(res.cols()== new_vec.size());
     for(int i=0;i<res.cols(); i++) {
         res(0,i) = new_vec[i];
     }
 
+    std::vector<double> ret;
     Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic> matrix_eigenvalues = res.eigenvalues();
     for(int i =0; i< matrix_eigenvalues.rows(); i++ ) {
         double real = std::real(matrix_eigenvalues(i));
         double img = std::imag(matrix_eigenvalues(i));
-        std::cout << " solution " << i << " real: " << real << " img: " << img << std::endl;
+        
+        if((real <= 0) || std::abs(img) >= 1e-16){ 
+            // ignoring negative roots and complex roots, if all roots are complex, the function J is monotonous
+            // 
+            continue;
+        }
+        //std::cout << " solution " << i << " real: " << real << " img: " << img << std::endl;
+        ret.push_back(real);
     }
+    for(auto r: ret)  {
+        std::cout << " valid solution: " << " real: " << r << std::endl;
+    }
+   return ret;
 
 }

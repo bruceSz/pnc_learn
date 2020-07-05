@@ -146,9 +146,9 @@ void trajectoryLibrary(const Vector3d start_pt, const Vector3d start_velocity, c
                 bool collision = false;
                 double delta_time;
                 delta_time = _time_interval / double(_time_step);
-                ROS_INFO(" The time_interval is: %f" ,  _time_interval);
-                ROS_INFO(" The delta_time is : %f" , delta_time);
-                ROS_INFO(" time step is : %d" , _time_step);
+               // ROS_INFO(" The time_interval is: %f" ,  _time_interval);
+                //ROS_INFO(" The delta_time is : %f" , delta_time);
+                //ROS_INFO(" time step is : %d" , _time_step);
                 
                 for(int step=0 ; step<=_time_step ; step ++){
                     /*
@@ -211,7 +211,7 @@ void trajectoryLibrary(const Vector3d start_pt, const Vector3d start_velocity, c
         }
     }
     TraLibrary[a][b][c] -> setOptimal();
-    ROS_INFO("new Tra library get. ");
+    ROS_INFO("new Tra library get.  with cost: %f", TraLibrary[a][b][c]->Trajctory_Cost);
     visTraLibrary(TraLibrary);
     return;
 }

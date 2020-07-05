@@ -183,6 +183,10 @@ int main() {
 
 
 
+    std::pow(2.3, 1);
+    std::cout << " pow 1 of 2 is: " << std::pow(2,4) << std::endl;
+    std::cout << "pow -2 of 3 is : " << std::pow(3, -2) << std::endl;
+
 
 
 }
