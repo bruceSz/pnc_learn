@@ -20,6 +20,6 @@ function feasible=feasiblePoint(point,map)
 feasible=true;
 if ~(point(1)>=1 &&  point(1)<=size(map,2) && point(2)>=1 && point(2)<=size(map,1) && map(point(2),point(1))==255)
     disp("point not feasible: x:" + point(1) + "; y:"+point(2))
-    disp("map range : x : 1-" + size(map,1) + "; y:1-" + size(map,2))
+    %disp("map range : x : 1-" + size(map,1) + "; y:1-" + size(map,2))
     feasible=false;
 end

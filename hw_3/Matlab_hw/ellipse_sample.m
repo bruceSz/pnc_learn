@@ -1,10 +1,10 @@
-function point_list = ellipse_sample(start, goal, max_num)
+function point_list = ellipse_sample(start, goal, max_num, cbest)
     
-    count = 0
+    count = 0;
     
     cmin=norm(goal-start);
    
-    cbest=20  + cmin;
+    %cbest=20  + cmin;
    
     x_center = [(start + goal)/2, 0];
     disp("center of start and goal is : " + x_center)

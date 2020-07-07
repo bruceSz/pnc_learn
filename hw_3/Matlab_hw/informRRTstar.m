@@ -8,7 +8,7 @@ clc
 clear all; close all;
 x_I=50; y_I=50;           % 设置初始点
 start = [x_I, y_I]
-x_G=700; y_G=700;       % 设置目标点
+x_G=300; y_G=700;       % 设置目标点
 goal = [x_G, y_G]
 Thr=50;                 % 设置目标点阈值
 Delta= 30;              % 设置扩展步长
@@ -36,18 +36,29 @@ total_iter = 600;
 
 %Snapshot cost:  Met node around goal with iter: 283
 
+% first do the rrt_star search.
+% then do the ellipse_sample with total_iter limit
 
-points = ellipse_sample(start, goal, total_iter)
-all_samples = size(points.v,2)
 
-for iter = 1:all_samples
+
+
+
+
+
+rrt_star_total_iter=600
+for iter = 1:rrt_star_total_iter
 %for iter = 1:total_iter
    
     %Step 1: 在地图中随机采样一个点x_rand
     %提示：用（x_rand(1),x_rand(2)）表示环境中采样点的坐标
-    x_rand = [];
-    x_rand(1) = points.v(iter).x;
-    x_rand(2) = points.v(iter).y;
+    
+    %x_rand = [];
+    %x_rand(1) = points.v(iter).x;
+    %x_rand(2) = points.v(iter).y;
+    
+    x_rand = rand(1,2);
+    x_rand(1) = ceil(x_rand(1) * size(Imp, 1));
+    x_rand(2) = ceil(x_rand(2) * size(Imp, 2));
     % nearest_node = 
     
     % x_near=[];
@@ -58,7 +69,7 @@ for iter = 1:all_samples
     [x_near, x_near_idx] = findNearest(T, count, x_rand(1), x_rand(2));
     %x_near = node_dis(1)
     %dis = node_dis(2)
-    disp("nearest node is: x:" +x_near(1) + "; y:"+ x_near(2))
+    %disp("nearest node is: x:" +x_near(1) + "; y:"+ x_near(2))
 
     x_new=[];
     %Step 3: 扩展得到x_new节点
@@ -74,7 +85,7 @@ for iter = 1:all_samples
 
     %检查节点是否是collision-free
     if ~collisionChecking(x_near,x_new,Imp) 
-        disp("collision failed ignore x_new.")
+        disp("collision failed ignore x_new.");
         continue;
     end
     count=count+1;
@@ -96,7 +107,7 @@ for iter = 1:all_samples
     %Step 5:检查是否到达目标点附近 
     %提示：注意使用目标点阈值Thr，若当前节点和终点的欧式距离小于Thr，则跳出当前for循环
     if computeDistance(x_new(1),x_new(2), x_G, y_G ) <= Thr
-        disp("Met node around goal with iter: " + iter)
+        %disp("Met node around goal with iter: " + iter)
         line([x_near(1),x_new(1)], [x_near(2),   x_new(2)],'Color','b',  'Linewidth', 1);
         hold on
         break;
@@ -112,12 +123,14 @@ for iter = 1:all_samples
 end
 
 %% 路径已经找到，反向查询
-if iter < all_samples
 
+all_dist = inf
+if iter <  rrt_star_total_iter
     % count is the last node added to T.
     path.pos(1).x = x_G; path.pos(1).y = y_G;
     path.pos(2).x = T.v(count).x;
     path.pos(2).y = T.v(count).y;
+    all_dist = T.v(count).all_dist
     pathIndex = T.v(count).indPrev; % 终点加入路径
     j=0;
     while pathIndex ~= 1
@@ -142,10 +155,120 @@ else
 end
 
 
+
+
+% begin to do ellipse_sample and optimize the path.
+inform_total_iter = 3;
+if all_dist < inf
+   
+    for iter = 1:inform_total_iter
+
+        ellipse_T.v(1).x = x_I;         % T是我们要做的树，v是节点，这里先把起始点加入到T里面来
+        ellipse_T.v(1).y = y_I; 
+        ellipse_T.v(1).xPrev = x_I;     % 起始节点的父节点仍然是其本身
+        ellipse_T.v(1).yPrev = y_I;
+        ellipse_T.v(1).dist=0;          % 从父节点到该节点的距离，这里可取欧氏距离
+        ellipse_T.v(1).indPrev = 0;     %
+        ellipse_T.v(1).all_dist = 0;
+        e_count = 1
+
+        points = ellipse_sample(start, goal, total_iter, all_dist)
+        all_samples = size(points.v,2)
+        for iter = 1:all_samples
+        
+            x_rand = [];
+            x_rand(1) = points.v(iter).x;
+            x_rand(2) = points.v(iter).y;
+        
+            [x_near, x_near_idx] = findNearest(ellipse_T, e_count, x_rand(1), x_rand(2));
+            
+            %disp("nearest node is: x:" +x_near(1) + "; y:"+ x_near(2))
+        
+            x_new=[];
+        
+            x_new = try_rand_node([x_near(1), x_near(2)], x_rand, Delta);
+        
+            if ~collisionChecking(x_near,x_new,Imp) 
+                disp("collision failed ignore x_new.")
+                continue;
+            end
+            e_count=e_count+1;
+            
+            [flag, new_T] = insert_into_tree(e_count, ellipse_T, x_new, 50);
+            
+        
+            if flag == false
+                disp("find another rand, inset failed.")
+                return;
+            end
+            ellipse_T = new_T;
+        
+            if computeDistance(x_new(1),x_new(2), x_G, y_G ) <= Thr
+                disp("Met node around goal with iter: " + iter)
+                line([x_near(1),x_new(1)], [x_near(2),   x_new(2)],'Color','b',  'Linewidth', 1);
+                hold on
+                break;
+            end
+            
+            line([x_near(1),x_new(1)] , [x_near(2), x_new(2)], 'Color',  'b', 'Linewidth', 1);
+            hold on
+            
+            pause(0.2); %暂停0.1s，使得RRT扩展过程容易观察
+        end
+            
+        if iter < all_samples
+            % update the all_dist
+            all_dist = ellipse_T.v(e_count).all_dist;
+            disp("ellipse's cbest updated to "  + all_dist);
+            dispPath(ellipse_T, e_count, x_G, y_G, x_I, y_I);
+
+        else
+            disp("We can not find path in ellipse sample method.");
+            break;
+        end
+        
+    end
+
+    
+    
+
+end
+
+
+function flag = dispPath(T, count, x_G, y_G, x_I, y_I)
+    % count is the last node added to T.
+    path.pos(1).x = x_G; 
+    path.pos(1).y = y_G;
+    
+    path.pos(2).x = T.v(count).x;
+    path.pos(2).y = T.v(count).y;
+    %all_dist = T.v(count).all_dist
+    pathIndex = T.v(count).indPrev; % 终点加入路径
+    j=0;
+    while pathIndex ~= 1
+        %pathIndex = cast(pathIndex, 'int32')
+        %disp("x is : " + T.v(pathIndex).x)
+        %disp("pathIndex is :" + pathIndex)
+        path.pos(j+3).x = T.v(pathIndex).x;
+        path.pos(j+3).y = T.v(pathIndex).y;
+        pathIndex = T.v(pathIndex).indPrev;
+        if pathIndex == 1
+            break
+        end
+        j=j+1;
+    end  % 沿终点回溯到起点
+
+    path.pos(end+1).x = x_I; path.pos(end).y = y_I; % 起点加入路径
+    for j = 2:length(path.pos)
+        line([path.pos(j).x; path.pos(j-1).x;], [path.pos(j).y; path.pos(j-1).y], 'Color','r', 'Linewidth', 3);
+    end
+end
+
+
 function [nearest_nodexxx, nearest_node_idx] =findNearest(T, t_size,x, y)
     ret_n_node = T.v(1);
     node_index = 1;
-    disp("T has size: " + size(T.v)  + " t_size is : " + t_size)
+    %disp("T has size: " + size(T.v)  + " t_size is : " + t_size)
     min_distance = inf;
     for i = 1:t_size
         % iterate all nodes in the T and compute distance
@@ -190,22 +313,18 @@ function [flag, new_T] = insert_into_tree(count, T, x_new, radius)
     % 4 rewire the T
     
     % 1
-    disp("begin insert into the tree")
+    %disp("begin insert into the tree")
     near_list  = find_near_node_within(count-1 , T, x_new, radius);
     
 
-    disp("near node count within radius size: " +  (near_list))
-    %near_list = near_list_p(1) 
-    %near_count = near_list_p(2)
+    %disp("near node count within radius size: " +  (near_list))
 
     % 2
     [target_node, target_idx] = target_parrent(T, near_list, x_new);
-    disp("find a target_node with idx: " + target_idx)
-    %target_node = target_node_p(1)
-    %target_idx = target_node_p(2)
+    %disp("find a target_node with idx: " + target_idx)
     if target_idx == -1
-        flag = false
-        return
+        flag = false;
+        return;
     end
 
     % 3
@@ -220,7 +339,7 @@ function [flag, new_T] = insert_into_tree(count, T, x_new, radius)
     %4
     rewire(near_list, T, count);
     flag = true;
-    disp("after rewire cout : " + count + " T size is : " + size(T.v))
+    %disp("after rewire cout : " + count + " T size is : " + size(T.v))
     new_T = T;  
 
 end
@@ -228,25 +347,25 @@ end
 
 function T = rewire(near_list, T, count)
     curr_node = T.v(count);
-    near_count = size(near_list, 1)
+    near_count = size(near_list, 1);
     for i=1:near_count-1
-        near_node = near_list.v(i)
-        tmp_dist = computeDistance(near_node.x, near_node.y, curr_node.x, curr_node.y)
-        tmp_all_dis = curr_node.all_dist  + tmp_dist
+        near_node = near_list.v(i);
+        tmp_dist = computeDistance(near_node.x, near_node.y, curr_node.x, curr_node.y);
+        tmp_all_dis = curr_node.all_dist  + tmp_dist;
         if tmp_all_dis < near_node.all_dist
             % update the dist, indPrev, xPrev, yPrev
-            near_node.xPrev = curr_node.x
-            near_node.yPrev = curr_node.y
-            near_node.dist = tmp_dist
-            near_node.indPrev = count
-            near_node.all_dist = tmp_all_dis
+            near_node.xPrev = curr_node.x;
+            near_node.yPrev = curr_node.y;
+            near_node.dist = tmp_dist;
+            near_node.indPrev = count;
+            near_node.all_dist = tmp_all_dis;
 
         end
     end
 end
 
 function [parrent_node, parrent_idx] = target_parrent(T, near_list, x_new)
-    near_count = size(near_list)
+    near_count = size(near_list);
     if near_count == 0
         disp("Error there is no near node.")
         parrent_idx  = -1;
@@ -254,30 +373,23 @@ function [parrent_node, parrent_idx] = target_parrent(T, near_list, x_new)
         parrent_node = struct ;
     end
 
-    %if near_count == 1
-    %    disp("Error find a parrent  the radius maybe too big")
-    %    parrent_idx  = -1
-    %    parrent_node = struct
-    %    return
-    %    
-    %end
-    f_index = near_list(1)
-    disp("f_index is : " + f_index)
-    f_node = T.v(f_index)
+    f_index = near_list(1);
+    %disp("f_index is : " + f_index);
+    f_node = T.v(f_index);
     min_path_dis = computeDistance(f_node.x, f_node.y, x_new(1), x_new(2)) + f_node.all_dist;
     min_node = f_node;
     min_idx = f_index;
-    disp("near list count is : " + size(near_list) + " provided count is : "+near_count)
+   % disp("near list count is : " + size(near_list) + " provided count is : "+near_count)
     for i=2:near_count
-        node_idx = near_list(i)
+        node_idx = near_list(i);
     
-        c_node = T.v(node_idx)
-        curr_dis = computeDistance(c_node.x , c_node.y, x_new(1), x_new(2))
-        curr_all_dis = curr_dis + c_node.all_dist
+        c_node = T.v(node_idx);
+        curr_dis = computeDistance(c_node.x , c_node.y, x_new(1), x_new(2));
+        curr_all_dis = curr_dis + c_node.all_dist;
         if curr_all_dis < min_path_dis
             min_node = c_node;
             min_path_dis = curr_all_dis;
-            min_idx = node_idx
+            min_idx = node_idx;
             %parrent_idx = i
         end
     end
@@ -290,7 +402,7 @@ end
 function near_listxx = find_near_node_within(count, T, x_new, radius)
     %near_listxx;
     near_count = 0;
-    node_listxx = []
+    node_listxx = [];
     %near_listxx.v(near_count) = 
     %curr_node = T.v(near_count);
     %near_listxx(near_count) = curr_node;
@@ -303,10 +415,10 @@ function near_listxx = find_near_node_within(count, T, x_new, radius)
         curr_node = T.v(i);
         dis = computeDistance(curr_node.x, curr_node.y, x_new(1), x_new(2));
         if dis <= radius
-            disp("assignment begin with index: " + i);
+            %disp("assignment begin with index: " + i);
             near_count = near_count + 1;
             near_listxx(near_count) = i;
-            disp("assignment end. count: "  + near_count + " true size: " + near_listxx + "\n");
+            %disp("assignment end. count: "  + near_count + " true size: " + near_listxx + "\n");
             
         end
     end
@@ -315,7 +427,7 @@ function near_listxx = find_near_node_within(count, T, x_new, radius)
         %near_listxx = struct
         %near_listxx.v = null
     end
-    disp("leaving find_near_node_within: n_c: " + near_count + " true size of node: " + near_listxx)
+    %disp("leaving find_near_node_within: n_c: " + near_count + " true size of node: " + near_listxx)
 end
 
 function distance = computeNodeDist(p1, p2)

@@ -17,7 +17,8 @@ function flag = test_llipse_sample()
     hold on
     grid on
 
-    points = ellipse_sample(start, goal, 100)
+    cmin=norm(goal-start);
+    points = ellipse_sample(start, goal, 100, cmin+2)
     disp("size of points: " + size(points.v,2))
     for i = 1:size(points.v,2)
         disp("points i is: x:" + points.v(i).x + " ; y: " + points.v(i).y)
