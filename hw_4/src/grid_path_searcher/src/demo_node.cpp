@@ -66,17 +66,17 @@ void rcvWaypointsCallback(const nav_msgs::Path & wp)
     ROS_INFO("[node] receive the planning target");
 
     ROS_INFO("do the hack to test the code.");
-    _start_pt(0) = -0.557813;
-    _start_pt(1) =  1.06781;
-    _start_pt(2) = 0.0812813;
-
-    _start_velocity(0) = -1.075;
-    _start_velocity(1) = 1.475;
-    _start_velocity(2) = 0.1275;
-
-    target_pt(0) = -2.30443;
-    target_pt(1) = 3.01808;
-    target_pt(2) = 0;
+    //_start_pt(0) = -0.557813;
+    //_start_pt(1) =  1.06781;
+    //_start_pt(2) = 0.0812813;
+//
+    //_start_velocity(0) = -1.075;
+    //_start_velocity(1) = 1.475;
+    //_start_velocity(2) = 0.1275;
+//
+    //target_pt(0) = -2.30443;
+    //target_pt(1) = 3.01808;
+    //target_pt(2) = 0;
 
     trajectoryLibrary(_start_pt,_start_velocity,target_pt);
 }
