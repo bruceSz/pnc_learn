@@ -115,17 +115,8 @@ double Homeworktool::OptimalBVP(Eigen::Vector3d _start_position,Eigen::Vector3d 
     double a = delta_p_x_square  + delta_p_y_square + delta_p_z_square;
     double b = delta_v_x_square  + delta_v_y_square + delta_v_z_square;
     double c = vx0 * delta_p_x + vy0 * delta_p_y + vz0 * delta_p_z;
-
-    double m = delta_p_x*delta_p_x +delta_p_y*delta_p_y + delta_p_z*delta_p_z;
-
-    double n =  -1 * (2*(delta_p_x*vx0 + delta_p_y*vy0 + delta_p_z*vz0) + 
-                  delta_p_x*delta_v_x + delta_p_y*delta_v_y + delta_p_z*delta_v_z );
-    double k = 3*(vx0*vx0 + vy0*vy0 +vz0*vz0 + delta_v_x*vx0 + delta_v_y*vy0 + delta_v_z*vz0) +
-                  delta_v_x*delta_v_x + delta_v_y*delta_v_y + delta_v_z*delta_v_z;
-        
-
+    
     std::cout << " a is: " << a << " b is : " << b << " c is: " << c << std::endl;
-    std::cout << " m is: " << m << " n is : " << n << " k is: " << k << std::endl;
     
     
     vector<double> tmpOptimalCost(4, 100000.0);
