@@ -53,3 +53,13 @@ add_executable(test_eigen
 target_link_libraries(test_eigen
     ${catkin_LIBRARIES}
 )
+
+
+add_executable(test_hw_tool
+    src/test_hw_tool.cpp
+    src/hw_tool.cpp
+)
+
+target_link_libraries(test_hw_tool
+    ${catkin_LIBRARIES}
+)

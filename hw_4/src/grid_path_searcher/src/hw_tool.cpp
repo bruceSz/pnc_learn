@@ -83,7 +83,87 @@ Eigen::Vector3d Homeworktool::coordRounding(const Eigen::Vector3d & coord)
     return gridIndex2coord(coord2gridIndex(coord));
 }
 
+
+
+
+
 double Homeworktool::OptimalBVP(Eigen::Vector3d _start_position,Eigen::Vector3d _start_velocity,Eigen::Vector3d _target_position)
+{
+    double optimal_cost = 100000.0; 
+    double delta_p_x = _target_position(0) - _start_position(0);
+    double delta_p_y = _target_position(1) - _start_position(1);
+    double delta_p_z = _target_position(2) - _start_position(2);
+    
+    double delta_p_x_square = delta_p_x * delta_p_x;
+    double delta_p_y_square = delta_p_y * delta_p_y;
+    double delta_p_z_square = delta_p_z * delta_p_z;
+
+    double delta_v_x = 0 - _start_velocity(0);
+    double delta_v_y = 0 - _start_velocity(1);
+    double delta_v_z = 0 - _start_velocity(2);
+
+    double delta_v_x_square = delta_v_x * delta_v_x;
+    double delta_v_y_square = delta_v_y * delta_v_y;
+    double delta_v_z_square = delta_v_z * delta_v_z;
+
+
+    double vx0 = _start_velocity(0);
+    double vy0 = _start_velocity(1);
+    double vz0 = _start_velocity(2);
+
+    
+    double a = delta_p_x_square  + delta_p_y_square + delta_p_z_square;
+    double b = delta_v_x_square  + delta_v_y_square + delta_v_z_square;
+    double c = vx0 * delta_p_x + vy0 * delta_p_y + vz0 * delta_p_z;
+
+    double m = delta_p_x*delta_p_x +delta_p_y*delta_p_y + delta_p_z*delta_p_z;
+
+    double n =  -1 * (2*(delta_p_x*vx0 + delta_p_y*vy0 + delta_p_z*vz0) + 
+                  delta_p_x*delta_v_x + delta_p_y*delta_v_y + delta_p_z*delta_v_z );
+    double k = 3*(vx0*vx0 + vy0*vy0 +vz0*vz0 + delta_v_x*vx0 + delta_v_y*vy0 + delta_v_z*vz0) +
+                  delta_v_x*delta_v_x + delta_v_y*delta_v_y + delta_v_z*delta_v_z;
+        
+
+    std::cout << " a is: " << a << " b is : " << b << " c is: " << c << std::endl;
+    std::cout << " m is: " << m << " n is : " << n << " k is: " << k << std::endl;
+    
+    
+    vector<double> tmpOptimalCost(4, 100000.0);
+
+    std::vector<double> coefs;
+
+    auto coef_4 = 1.0f;
+    auto coef_3 = 0.0;
+    auto coef_2 = - 4 * b;
+    auto coef_1 = +24 * c;
+    auto coef_0 = -36 * a;
+
+    coefs.push_back(coef_4);
+    coefs.push_back(coef_3);
+    coefs.push_back(coef_2);
+    coefs.push_back(coef_1);
+    coefs.push_back(coef_0);
+
+    std::vector<double> T_vec = computeRoot(coefs);
+    
+    for (auto T : T_vec) {
+        double T2 = std::pow(T, -2);
+        double T3 =  std::pow(T, -3);
+        double tmp  = T + (12*a) * T3 - (12*c) * T2 + (4*b)/T;
+
+        tmpOptimalCost.push_back(tmp);
+    }
+
+    for(auto c: tmpOptimalCost)
+    {
+        optimal_cost = std::min(c,optimal_cost);
+    }
+	
+    return optimal_cost;
+}
+
+
+double OptimalBVP(Eigen::Vector3d _start_position,Eigen::Vector3d _start_velocity,Eigen::Vector3d _target_position)
 {
     double optimal_cost = 100000; // this just to initial the optimal_cost, you can delete it 
     /*
@@ -108,14 +188,17 @@ double Homeworktool::OptimalBVP(Eigen::Vector3d _start_position,Eigen::Vector3d 
     double delta_v_x  = - _start_velocity(0);
     double delta_v_y  = - _start_velocity(1);
     double delta_v_z  = - _start_velocity(2);
+    double vx0 = _start_velocity(0);
+    double vy0 =  _start_velocity(1);
+    double vz0 =  _start_velocity(2);
 
-    double delta_v_x_squared = delta_v_x * delta_v_x;
-    double delta_v_y_squared = delta_v_y * delta_v_y;
-    double delta_v_z_squared = delta_v_z * delta_v_z;
-
-    double coef_4 = 1.0;
-    double coef_3 = 0.0;
-    double coef_2 = -112.0 * (delta_v_x_squared + delta_v_y_squared + delta_v_z_squared);
+    //double delta_v_x_squared = delta_v_x * delta_v_x;
+    //double delta_v_y_squared = delta_v_y * delta_v_y;
+    //double delta_v_z_squared = delta_v_z * delta_v_z;
+//
+    //double coef_4 = 1.0;
+    //double coef_3 = 0.0;
+    //double coef_2 = -112.0 * (delta_v_x_squared + delta_v_y_squared + delta_v_z_squared);
 
     double delta_p_x_p = _target_position(0) - _start_position(0);
     double delta_p_y_p = _target_position(1) - _start_position(1);
@@ -123,17 +206,33 @@ double Homeworktool::OptimalBVP(Eigen::Vector3d _start_position,Eigen::Vector3d 
 
 
    
-
+//
     double delta_p_x_p_squared = delta_p_x_p * delta_p_x_p;
     double delta_p_y_p_squared = delta_p_y_p * delta_p_y_p;
     double delta_p_z_p_squared = delta_p_z_p * delta_p_z_p;
 
-    double coef_1 = 144.0 * ( delta_v_x *delta_p_x_p + delta_v_y * delta_p_y_p +  delta_v_z * delta_p_z_p );
+    //double coef_1 = 144.0 * ( delta_v_x *delta_p_x_p + delta_v_y * delta_p_y_p +  delta_v_z * delta_p_z_p );
 
-    double sum_p_p_squared = delta_p_x_p_squared + delta_p_y_p_squared + delta_p_z_p_squared;
-    double coef_0 = -36 * (sum_p_p_squared);
+    //double sum_p_p_squared = delta_p_x_p_squared + delta_p_y_p_squared + delta_p_z_p_squared;
+    //double coef_0 = -36 * (sum_p_p_squared);
 
+// new coef computation;
     
+    double m = delta_p_x_p_squared  + delta_p_y_p_squared + delta_p_z_p_squared;
+    double n =  -1 * (
+         2 * (delta_p_x_p*vx0 + delta_p_y_p*vy0 + delta_p_z_p * vz0 ) + delta_p_x_p * delta_v_x + delta_p_y_p * delta_v_y + delta_p_z_p * delta_v_z 
+         );
+    double k = 3 * (vx0 * vx0 + vy0 * vy0 + vz0 * vz0  + delta_v_x * vx0 + delta_v_y * vy0 + delta_v_z * vz0) 
+                + delta_v_x * delta_v_x + delta_v_y * delta_v_y + delta_v_z * delta_v_z;
+    std::cout << " m is : " << m << " n is : " << n << " k is : " << k << std::endl;
+
+    auto coef_4 = 1.0f;
+    auto coef_3 = 0.0f;
+    auto coef_2 =  - 4 * k;
+    auto coef_1 =  -24 * n;
+    auto coef_0 = -36 * m ;
+
+
 
     std::vector<double> p;
     p.push_back(coef_4);
@@ -142,31 +241,37 @@ double Homeworktool::OptimalBVP(Eigen::Vector3d _start_position,Eigen::Vector3d 
     p.push_back(coef_1);
     p.push_back(coef_0);
 
-    std::vector<double> T_vec = computeRoot(p);
+    //double T =  computeRoot4(coef_4, coef_3, coef_2, coef_1, coef_0);
 
+    std::vector<double> T_vec = computeRoot(p);
+    double T = T_vec[0];
     std::vector<double> J;
     // as default cost.
     J.push_back(optimal_cost);
 
-    for(auto T: T_vec ){ // loop through four roots
+    //for(auto T: T_vec ){ // loop through four roots
         
-         double delta_p_x = delta_p_x_p - _start_velocity(0) * T;
-         double delta_p_y = delta_p_y_p - _start_velocity(1) * T;
-         double delta_p_z = delta_p_z_p - _start_velocity(2) * T;
+    double delta_p_x = delta_p_x_p - _start_velocity(0) * T;
+    double delta_p_y = delta_p_y_p - _start_velocity(1) * T;
+    double delta_p_z = delta_p_z_p - _start_velocity(2) * T;
 
-         double delta_p_x_squared = delta_p_x * delta_p_x;
-         double delta_p_y_squared = delta_p_y * delta_p_y;
-         double delta_p_z_squared = delta_p_z * delta_p_z;
+    double delta_p_x_squared = delta_p_x * delta_p_x;
+    double delta_p_y_squared = delta_p_y * delta_p_y;
+    double delta_p_z_squared = delta_p_z * delta_p_z;
 
-        auto cost = T
-                 +  12 * (delta_p_x_squared + delta_p_y_squared + delta_p_z_squared) * std::pow(T, -3)
-                 + 4 * (delta_v_z_squared + delta_v_y_squared + delta_v_z_squared) * std::pow(T, -1)
-                 + 72 * (delta_v_x * delta_p_x + delta_v_y * delta_p_y  + delta_v_z * delta_p_z) * std::pow(T, -2);
-                     
-        std::cout << "cost is : " << cost << std::endl;
-        J.push_back(cost);
+    auto cost = T 
+        + 12*m * std::pow(T,-3) 
+        + 12 * n * std::pow(T, -2) 
+            + 4 * k * T;
+//`auto cost = T
+//`         +  12 * (delta_p_x_squared + delta_p_y_squared + delta_p_z_squared) * std::pow(T, -3)
+//`         + 4 * (delta_v_z_squared + delta_v_y_squared + delta_v_z_squared) * std::pow(T, -1)
+//`         + 72 * (delta_v_x * delta_p_x + delta_v_y * delta_p_y  + delta_v_z * delta_p_z) * std::pow(T, -2);
+                
+std::cout << "cost is : " << cost << std::endl;
+J.push_back(cost);
 
-    }
+    //}
 
     double min_cost = *min_element(J.begin(), J.end());
     ROS_INFO("Optimal cost is: %f\n", min_cost);
@@ -178,7 +283,7 @@ double Homeworktool::OptimalBVP(Eigen::Vector3d _start_position,Eigen::Vector3d 
 }
 
 
-Eigen::MatrixXd Homeworktool::diag(Eigen::VectorXd vec, int total_step) {
+Eigen::MatrixXd diag(Eigen::VectorXd vec, int total_step) {
     Eigen::MatrixXd m = vec.asDiagonal();
 
     //assert(step < vec.size() -1);
@@ -225,8 +330,44 @@ Eigen::MatrixXd Homeworktool::diag(Eigen::VectorXd vec, int total_step) {
     return old;
 }
 
+
+double computeRoot4(double a, double b, double c, double d, double e) {
+    // a is the coef of T^4;
+    // 
+
+    Eigen::Matrix<double, 4, 4> CompanionMatrix44;
+    CompanionMatrix44 << 0, 0, 0, -e,
+				         1, 0, 0, -d,
+				         0, 1, 0, -c,
+				         0, 0, 1, 0 ;
+
+
+    std::cout << " a is: " << a
+        << " b is: " << b
+        << " c is: " << c
+        << " d is: " << d
+        << " e is: " << e << std::endl;
+
+
+    auto eigenVals = CompanionMatrix44.eigenvalues();
+    double res = 0;
+    for(int i=0;i<eigenVals.size(); i++) {
+        auto img = eigenVals(i).imag();
+        auto real = eigenVals(i).real();
+        std::cout << "real is : " << real << " img is : " << img << std::endl;
+        if (std::abs(img) < 1e-16 && real > 0.0 )   {
+            res = real;
+            std::cout << "res is " << res << std::endl;
+        }
+        
+    }
+
+    return res;
+
+}
+
 // refer: https://blog.csdn.net/fb_941219/article/details/102991181
-std::vector<double> Homeworktool::computeRoot(std::vector<double> coefs ) {
+std::vector<double> computeRoot(std::vector<double> coefs ) {
     //double optimal_cost = 100000.;
 
     int total = coefs.size();
@@ -236,11 +377,15 @@ std::vector<double> Homeworktool::computeRoot(std::vector<double> coefs ) {
 
 
     std::vector<double> new_vec;
+
+    std::cout << "first coef is i: " << 0 << " val: " << coefs[0] << std::endl;
     new_vec.resize(real_coefs.size());
     for(int i =0;i<real_coefs.size(); i++) {
+        std::cout << " coef i: "  << i+1 << "  val: " << real_coefs[i] << std::endl;
         double tmp = -1 * real_coefs[i]/ coefs[0];
         new_vec[i] = tmp;
     }
+
 
 
     Eigen::VectorXd diag_ones;
@@ -265,6 +410,7 @@ std::vector<double> Homeworktool::computeRoot(std::vector<double> coefs ) {
         double real = std::real(matrix_eigenvalues(i));
         double img = std::imag(matrix_eigenvalues(i));
         
+        std::cout << "real: " << real << "; img: " << img << std::endl;
         if((real <= 0) || std::abs(img) >= 1e-16){ 
             // ignoring negative roots and complex roots, if all roots are complex, the function J is monotonous
             // 
@@ -272,10 +418,10 @@ std::vector<double> Homeworktool::computeRoot(std::vector<double> coefs ) {
         }
         //std::cout << " solution " << i << " real: " << real << " img: " << img << std::endl;
         ret.push_back(real);
+        
+        std::cout << " valid root is " << real << std::endl;        
     }
-    for(auto r: ret)  {
-        std::cout << " valid solution: " << " real: " << r << std::endl;
-    }
+
    return ret;
 
 }
