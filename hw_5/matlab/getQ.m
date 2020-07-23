@@ -23,7 +23,7 @@ function Q = getQ(n_seg, n_order, ts)
                 tmp_matrix = zeros(1,coef_n);
                 tmp_arr = tmp_matrix(1,:);
                 %Q_k(qk_count) = tmp_arr;
-                Q_k(i,:) = tmp_arr
+                Q_k(i,:) = tmp_arr;
                 %qk_count  = qk_count +1;
             else
                 tmp_arr = [];
@@ -37,14 +37,11 @@ function Q = getQ(n_seg, n_order, ts)
                     tmp_arr(jj) = item;
                     
                 end
-                Q_k(i,: ) = tmp_arr
+                Q_k(i,: ) = tmp_arr;
                    
-            end
-            
+            end 
             
         end
-        
-        
         
         Q = blkdiag(Q, Q_k);
     end

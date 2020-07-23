@@ -36,6 +36,11 @@ end
 poly_coef_x = MinimumSnapQPSolver(path(:, 1), ts, n_seg, n_order);
 poly_coef_y = MinimumSnapQPSolver(path(:, 2), ts, n_seg, n_order);
 
+poly_coef_x_p = poly_coef_x';
+poly_coef_y_p = poly_coef_y';
+
+disp("coef_x_p size: " + size(poly_coef_x_p));
+disp("coef_y_p size: " + size(poly_coef_y_p));
 
 % display the trajectory
 X_n = [];
@@ -46,12 +51,30 @@ for i=0:n_seg-1
     %#####################################################
     % STEP 3: get the coefficients of i-th segment of both x-axis
     % and y-axis
+    skip = i*(n_order + 1);
+    disp("skip is : " + skip);
+
+    
+    
+    tmp_x = poly_coef_x_p(1,skip+1: skip+n_order+1);
+    Pxi = flip(tmp_x);
+
+    sqx = sumsqr(Pxi);
+    disp("sqx is: " + sqx);
+
+    tmp_y = poly_coef_y_p(1,skip+1: skip+n_order+1);
+    Pyi  =  flip(tmp_y);
+    sqy = sumsqr(Pyi);
+    disp("sqy is: " + sqy);
+
     for t = 0:tstep:ts(i+1)
         X_n(k)  = polyval(Pxi, t);
         Y_n(k)  = polyval(Pyi, t);
         k = k + 1;
     end
 end
+
+
  
 plot(X_n, Y_n , 'Color', [0 1.0 0], 'LineWidth', 2);
 hold on
@@ -69,4 +92,5 @@ function poly_coef = MinimumSnapQPSolver(waypoints, ts, n_seg, n_order)
     [Aeq, beq] = getAbeq(n_seg, n_order, waypoints, ts, start_cond, end_cond);
     f = zeros(size(Q,1),1);
     poly_coef = quadprog(Q,f,[],[],Aeq, beq);
+    disp("size of poly_coef is : " + size(poly_coef));
 end

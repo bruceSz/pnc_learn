@@ -9,13 +9,15 @@ function [Aeq beq]= getAbeq(n_seg, n_order, waypoints, ts, start_cond, end_cond)
     % 
     % 1 beq_start is the start_cond
     % 2 Aeq(1,1) is the p0 of seg_1 here, set it to start_cond(1) 
-    % 3 v,a,j all set to 0, when T is 0, no need to set here(default is 0).
-    beq_start = start_cond
-    Aeq(1,1) = 1
+    % 3 v,a,j all set to 0, when T is 0.
+    beq_start(1,1) = start_cond(1,1); 
+    Aeq_start(1,1) = 1; % p 
+    Aeq_start(2,2) = 1; % v
+    Aeq_start(3,3) = 1; % a
+    Aeq_start(4,4) = 1; % j
     
 
     %
-    
     %#####################################################
     % p,v,a constraint in end
     Aeq_end = zeros(4, n_all_poly);
@@ -28,16 +30,18 @@ function [Aeq beq]= getAbeq(n_seg, n_order, waypoints, ts, start_cond, end_cond)
     ts_end = ts(n_seg);
     vals = getAeqPoly(n_order, ts_end);
 
-    beq_end = end_cond;
+    beq_end(1,1) = end_cond(1,1);
 
-    Aeq_end(1,1:1 + 7) = [1 vals];
-    Aeq_end(2,1:1 + 7) = AeqPolyDerivative(Aeq_end(1,1:8), n_order, ts(1));
-    Aeq_end(3,1:1 + 7) = AeqPolyDerivative(Aeq_end(2,1:8), n_order, ts(1));
-    Aeq_end(4,1:1 + 7) = AeqPolyDerivative(Aeq_end(3,1:8), n_order, ts(1));
+    end_idx = n_all_poly - 7;
+    Aeq_end(1,end_idx:end_idx + 7) = [1 vals];
+    Aeq_end(2,end_idx:end_idx + 7) = AeqPolyDerivative(Aeq_end(1,end_idx:end_idx + 7), n_order, ts_end);
+    Aeq_end(3,end_idx:end_idx + 7) = AeqPolyDerivative(Aeq_end(2,end_idx:end_idx + 7), n_order, ts_end);
+    Aeq_end(4,end_idx:end_idx + 7) = AeqPolyDerivative(Aeq_end(3,end_idx:end_idx + 7), n_order, ts_end);
 
     
     %#####################################################
     % position constrain in all middle waypoints
+    disp("all poly is : " + n_all_poly);
     Aeq_wp = zeros(n_seg-1, n_all_poly);
     beq_wp = zeros(n_seg-1, 1);
     % STEP 2.3: write expression of Aeq_wp and beq_wp
@@ -69,8 +73,7 @@ function [Aeq beq]= getAbeq(n_seg, n_order, waypoints, ts, start_cond, end_cond)
         n_skip = (i) * coef_n;
         Aeq_con_p(i,f_skip + 1 : f_skip + coef_n)  = [1 vals];        
         % for next_seg, t=0 when only the first 
-        Aeq_con_p(i,n_skip + 1) = 1;
-
+        Aeq_con_p(i,n_skip + 1) = -1;
     end
     
     %#####################################################
@@ -85,7 +88,7 @@ function [Aeq beq]= getAbeq(n_seg, n_order, waypoints, ts, start_cond, end_cond)
     for i=1:n_seg - 1
         f_skip = (i-1) * coef_n;
         n_skip = (i) * coef_n;
-        tmp = [1 vals]
+        tmp = [1 vals];
         v_vals = AeqPolyDerivative(tmp,n_order, 1);
         Aeq_con_v(i,f_skip +1:f_skip+coef_n ) = v_vals;
         Aeq_con_v(i, n_skip+2) = -1;
@@ -104,7 +107,7 @@ function [Aeq beq]= getAbeq(n_seg, n_order, waypoints, ts, start_cond, end_cond)
     for i=1:n_seg - 1
         f_skip = (i -1) * coef_n;
         n_skip = (i) * coef_n;
-        tmp = [1 vals]
+        tmp = [1 vals];
         v_vals = AeqPolyDerivative(tmp,n_order, 1);
         a_vals = AeqPolyDerivative(v_vals, n_order, 1);
 
@@ -138,29 +141,22 @@ function [Aeq beq]= getAbeq(n_seg, n_order, waypoints, ts, start_cond, end_cond)
     % combine all components to form Aeq and beq   
     Aeq_con = [Aeq_con_p; Aeq_con_v; Aeq_con_a; Aeq_con_j];
     beq_con = [beq_con_p; beq_con_v; beq_con_a; beq_con_j];
+
+    disp("size of Aeq_start: " + size(Aeq_start));
+    disp("size of Aeq_end: " + size(Aeq_end));
+    disp("size of Aeq_wp: " + size(Aeq_wp));
+    disp("size of Aeq_con: " + size(Aeq_con));
+
     Aeq = [Aeq_start; Aeq_end; Aeq_wp; Aeq_con];
+    disp("size of beq_start: " + size(beq_start));
+    disp("size of beq_end: " + size(beq_end));
+    disp("size of beq_wp: " + size(beq_wp));
+    disp("size of beq_con: " + size(beq_con));
+
     beq = [beq_start; beq_end; beq_wp; beq_con];
 end
 
 
-%test this.
-function res = getAeqPoly(n_order, tval) 
-    res = [];
-    for i = 1:n_order
-        res(i) = pow2(tval, i-1)
-    end
 
-end
 
-% test this.
-function res = AeqPolyDerivative(vals, n_order, base)
-    res = [];
-    coef_n = n_order + 1;
 
-    for i =1: coef_n
-        multi = i - 1;
-        res(i)  = multi * vals(i);
-        res(i) = res(i) / base;
-
-    end
-end
