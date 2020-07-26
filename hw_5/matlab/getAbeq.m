@@ -11,6 +11,7 @@ function [Aeq beq]= getAbeq(n_seg, n_order, waypoints, ts, start_cond, end_cond)
     % 2 Aeq(1,1) is the p0 of seg_1 here, set it to start_cond(1) 
     % 3 v,a,j all set to 0, when T is 0.
     beq_start(1,1) = start_cond(1,1); 
+    
     Aeq_start(1,1) = 1; % p 
     Aeq_start(2,2) = 1; % v
     Aeq_start(3,3) = 1; % a
@@ -56,7 +57,7 @@ function [Aeq beq]= getAbeq(n_seg, n_order, waypoints, ts, start_cond, end_cond)
         skip = (i-1) * coef_n;
         % here reuse the vals 
         Aeq_wp(i,skip+1:skip + coef_n) = [1 vals];
-        beq_wp(i, 1) = waypoints(i);
+        beq_wp(i, 1) = waypoints(i+1);
     end
     
     %#####################################################
@@ -73,7 +74,8 @@ function [Aeq beq]= getAbeq(n_seg, n_order, waypoints, ts, start_cond, end_cond)
         n_skip = (i) * coef_n;
         Aeq_con_p(i,f_skip + 1 : f_skip + coef_n)  = [1 vals];        
         % for next_seg, t=0 when only the first 
-        Aeq_con_p(i,n_skip + 1) = -1;
+        %Aeq_con_p(i,n_skip + 1:n_skip+8) = [0 -1 0 0 0 0 0 0 ];
+        Aeq_con_p(i,n_skip + 1: n_skip + 8) = [ -1 0 0 0 0 0 0 0];
     end
     
     %#####################################################
@@ -91,13 +93,16 @@ function [Aeq beq]= getAbeq(n_seg, n_order, waypoints, ts, start_cond, end_cond)
         tmp = [1 vals];
         v_vals = AeqPolyDerivative(tmp,n_order, 1);
         Aeq_con_v(i,f_skip +1:f_skip+coef_n ) = v_vals;
-        Aeq_con_v(i, n_skip+2) = -1;
+        Aeq_con_v(i, n_skip+1:n_skip+8) = [ 0 -1 0 0 0 0 0 0];
 
     end
+
+    disp("size of Aeq_con_v is : row: " + size(Aeq_con_v, 1) + ": cols: " + size(Aeq_con_v, 2));
 
     %#####################################################
     % acceleration continuity constrain between each 2 segments
     Aeq_con_a = zeros(n_seg-1, n_all_poly);
+    disp("size of Aeq_con_v is : row: " + size(Aeq_con_a, 1) + ": cols: " + size(Aeq_con_a, 2));
     beq_con_a = zeros(n_seg-1, 1);
     % STEP 2.6: write expression of Aeq_con_a and beq_con_a
     %
@@ -131,16 +136,14 @@ function [Aeq beq]= getAbeq(n_seg, n_order, waypoints, ts, start_cond, end_cond)
         v_vals = AeqPolyDerivative(tmp, n_order, 1);
         a_vals = AeqPolyDerivative(v_vals, n_order, 1);
         j_vals = AeqPolyDerivative(a_vals, n_order, 1);
-
         Aeq_con_j(i, f_skip + 1:f_skip + coef_n) =j_vals;
         Aeq_con_j(i, n_skip + 4) = -6;
-
     end
     
     %#####################################################
     % combine all components to form Aeq and beq   
-    Aeq_con = [Aeq_con_p; Aeq_con_v; Aeq_con_a; Aeq_con_j];
-    beq_con = [beq_con_p; beq_con_v; beq_con_a; beq_con_j];
+    Aeq_con = [Aeq_con_p; Aeq_con_v];% Aeq_con_a];% Aeq_con_j];
+    beq_con = [beq_con_p; beq_con_v];% beq_con_a];% beq_con_j];
 
     disp("size of Aeq_start: " + size(Aeq_start));
     disp("size of Aeq_end: " + size(Aeq_end));
