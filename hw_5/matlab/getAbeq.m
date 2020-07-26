@@ -142,8 +142,8 @@ function [Aeq beq]= getAbeq(n_seg, n_order, waypoints, ts, start_cond, end_cond)
     
     %#####################################################
     % combine all components to form Aeq and beq   
-    Aeq_con = [Aeq_con_p; Aeq_con_v];% Aeq_con_a];% Aeq_con_j];
-    beq_con = [beq_con_p; beq_con_v];% beq_con_a];% beq_con_j];
+    Aeq_con = [Aeq_con_p; Aeq_con_v; Aeq_con_a; Aeq_con_j];
+    beq_con = [beq_con_p; beq_con_v; beq_con_a; beq_con_j];
 
     disp("size of Aeq_start: " + size(Aeq_start));
     disp("size of Aeq_end: " + size(Aeq_end));
