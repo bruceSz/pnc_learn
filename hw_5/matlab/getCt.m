@@ -36,7 +36,10 @@ function Ct = getCt(n_seg, n_order)
     Ct = zeros(4 * 2 * n_seg, 4*2 + (n_seg-1)*4 );
     % (n_seg-1) waypoints.
     % beg and end.
+    
+    % n_seg +  7
     fix_num = 4 + 4 + (n_seg - 1);
+    % 3*(n_seg - 1)
     free_num = (n_seg-1) * 3;
     for i =1:n_seg
 
@@ -71,13 +74,13 @@ function Ct = getCt(n_seg, n_order)
             %
             for j = 1:4
                 % map to the end 4 elements for fixed variable.
-                row_idx = (i-1)*8 + j;
+                row_idx = (i-1)*8 + 4 + j;
                 col_idx = 4 + (n_seg - 1)  + j;
                 Ct(row_idx, col_idx) = 1;
             end
         else
             for j = 1:4
-                row_idx = (i-1)* 8 + j;
+                row_idx = (i-1)* 8 + 4 + j;
                 if j == 1
                     col_idx= i + 4;
                     Ct(row_idx, col_idx) = 1;

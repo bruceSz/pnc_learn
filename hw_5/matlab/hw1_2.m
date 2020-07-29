@@ -46,6 +46,7 @@ for i=0:n_seg-1
     end
 end
 
+%disp("X_n is : " + X_n);
 plot(X_n, Y_n ,'Color',[0 1.0 0],'LineWidth',2);
 hold on
 scatter(path(1:size(path,1),1),path(1:size(path,1),2));
@@ -64,17 +65,39 @@ function poly_coef = MinimumSnapCloseformSolver(waypoints, ts, n_seg, n_order)
     Ct = getCt(n_seg, n_order);
     C = Ct';
     R = C * inv(M)' * Q * inv(M) * Ct;
+    disp("size of R row : " + size(R,1) + " size of R col: " + size(R,2));
     R_cell = mat2cell(R, [n_seg+7 3*(n_seg-1)], [n_seg+7 3*(n_seg-1)]);
+    
     R_pp = R_cell{2, 2};
     R_fp = R_cell{1, 2};
     %#####################################################
     % STEP 3: compute dF
-    dF = [];
+    % dF = [];
+    dF = zeros(n_seg + 7);
     %
     %
     %
     %
+    dF(1,1) = start_cond(1,1);
+    dF(2,1) = start_cond(1,2);
+    dF(3,1) = start_cond(1,3);
+    dF(4,1) = start_cond(1,4);
 
-    dP = -inv(R_pp) * R_fp' * dF;
+    dF(n_seg + 4,1) = end_cond(1,1);
+    dF(n_seg + 5,1) = end_cond(1,2);
+    dF(n_seg + 6,1) = end_cond(1,3);
+    dF(n_seg + 7,1) = end_cond(1,4);
+
+    % size of wp equals to n_seg + 1.
+    for i=1:n_seg -1;
+        wp_idx = i+1;
+        dF(4+i,1) = waypoints(wp_idx);
+    end
+    
+    disp("rpp is: " + size(R_pp,2));
+    disp( " rfp  prime is: " + size(R_fp',1) );
+
+    dP = -inv(R_pp) * (R_fp') * dF;
     poly_coef = inv(M) * Ct * [dF;dP];
+    disp("p coef is: " + poly_coef)
 end
