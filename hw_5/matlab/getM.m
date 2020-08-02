@@ -11,8 +11,6 @@ function M = getM(n_seg, n_order, ts)
         %
         % Mj is one matrix generalized from M in page.45 in lecture5.
         for i = 1:8
-            
-            
 
             if i == 1
                 tmp_k = zeros(1,n_order + 1);

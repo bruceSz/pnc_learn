@@ -14,8 +14,8 @@ function [Aeq beq]= getAbeq(n_seg, n_order, waypoints, ts, start_cond, end_cond)
     
     Aeq_start(1,1) = 1; % p 
     Aeq_start(2,2) = 1; % v
-    Aeq_start(3,3) = 1; % a
-    Aeq_start(4,4) = 1; % j
+    Aeq_start(3,3) = 2; % a
+    Aeq_start(4,4) = 6; % j
     
 
     %
@@ -34,10 +34,23 @@ function [Aeq beq]= getAbeq(n_seg, n_order, waypoints, ts, start_cond, end_cond)
     beq_end(1,1) = end_cond(1,1);
 
     end_idx = n_all_poly - 7;
+
     Aeq_end(1,end_idx:end_idx + 7) = [1 vals];
-    Aeq_end(2,end_idx:end_idx + 7) = AeqPolyDerivative(Aeq_end(1,end_idx:end_idx + 7), n_order, ts_end);
-    Aeq_end(3,end_idx:end_idx + 7) = AeqPolyDerivative(Aeq_end(2,end_idx:end_idx + 7), n_order, ts_end);
-    Aeq_end(4,end_idx:end_idx + 7) = AeqPolyDerivative(Aeq_end(3,end_idx:end_idx + 7), n_order, ts_end);
+    xx = PolyDerivative(Aeq_end(1,end_idx: end_idx + 7), n_order, ts_end);
+    
+    xx_l2h = flip(xx);
+    
+    Aeq_end(2,end_idx:end_idx + 7) = xx_l2h;%PolyDerivative(Aeq_end(1,end_idx:end_idx + 7), n_order, ts_end);
+
+    xx = PolyDerivative(flip(Aeq_end(2, end_idx: end_idx + 7)), n_order-1, ts_end);
+    xx_l2h = flip(xx);
+    Aeq_end(3,end_idx:end_idx + 7) = xx_l2h;%PolyDerivative(Aeq_end(2,end_idx:end_idx + 7), n_order-1, ts_end);
+
+    xx = PolyDerivative(flip(Aeq_end(3, end_idx: end_idx + 7)), n_order-2, ts_end);
+    %disp("xx is: " + xx);
+    xx_l2h = flip(xx);
+    %disp("flip xx is: " + xx_l2h);
+    Aeq_end(4,end_idx:end_idx + 7) = xx_l2h;%PolyDerivative(Aeq_end(3,end_idx:end_idx + 7), n_order-1, ts_end);
 
     
     %#####################################################
@@ -91,8 +104,10 @@ function [Aeq beq]= getAbeq(n_seg, n_order, waypoints, ts, start_cond, end_cond)
         f_skip = (i-1) * coef_n;
         n_skip = (i) * coef_n;
         tmp = [1 vals];
-        v_vals = AeqPolyDerivative(tmp,n_order, 1);
-        Aeq_con_v(i,f_skip +1:f_skip+coef_n ) = v_vals;
+        tmp = flip(tmp);
+        v_vals = PolyDerivative(tmp,n_order, 1);
+        %disp("v_vals is: "+ v_vals);
+        Aeq_con_v(i,f_skip +1:f_skip+coef_n ) = flip(v_vals);
         Aeq_con_v(i, n_skip+1:n_skip+8) = [ 0 -1 0 0 0 0 0 0];
 
     end
@@ -113,11 +128,14 @@ function [Aeq beq]= getAbeq(n_seg, n_order, waypoints, ts, start_cond, end_cond)
         f_skip = (i -1) * coef_n;
         n_skip = (i) * coef_n;
         tmp = [1 vals];
-        v_vals = AeqPolyDerivative(tmp,n_order, 1);
-        a_vals = AeqPolyDerivative(v_vals, n_order, 1);
-
-        Aeq_con_v(i, f_skip+1:f_skip+coef_n  ) = a_vals;
-        Aeq_con_v(i, n_skip + 3) = -2;
+        % flip to h2l.
+        tmp =  flip(tmp);
+        v_vals = PolyDerivative(tmp,n_order, 1);
+        
+        a_vals = PolyDerivative(v_vals, n_order-1, 1);
+        disp("a_vals is : "+ a_vals);
+        Aeq_con_a(i, f_skip+1:f_skip+coef_n  ) = flip(a_vals);
+        Aeq_con_a(i, n_skip + 3) = -2;
     end
     
     %#####################################################
@@ -133,10 +151,12 @@ function [Aeq beq]= getAbeq(n_seg, n_order, waypoints, ts, start_cond, end_cond)
         f_skip = (i-1) * coef_n;
         n_skip = (i) * coef_n;
         tmp = [1 vals ];
-        v_vals = AeqPolyDerivative(tmp, n_order, 1);
-        a_vals = AeqPolyDerivative(v_vals, n_order, 1);
-        j_vals = AeqPolyDerivative(a_vals, n_order, 1);
-        Aeq_con_j(i, f_skip + 1:f_skip + coef_n) =j_vals;
+        tmp = flip(tmp);
+
+        v_vals = PolyDerivative(tmp, n_order, 1);
+        a_vals = PolyDerivative(v_vals, n_order-1, 1);
+        j_vals = PolyDerivative(a_vals, n_order-2, 1);
+        Aeq_con_j(i, f_skip + 1:f_skip + coef_n) = flip(j_vals);
         Aeq_con_j(i, n_skip + 4) = -6;
     end
     
