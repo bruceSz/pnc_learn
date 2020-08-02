@@ -116,8 +116,6 @@ for i=0:n_seg-1
     poly_cy = flip(tmp_y);
 
 
-    %xxx_tmp = [1 vals];
-    %xxx_v_vals = AeqPolyDerivative(tmp,n_order, 1);
 
 
 

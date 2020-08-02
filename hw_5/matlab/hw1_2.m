@@ -29,6 +29,19 @@ ts(n_seg) = T - t_sum;
 poly_coef_x = MinimumSnapCloseformSolver(path(:, 1), ts, n_seg, n_order);
 poly_coef_y = MinimumSnapCloseformSolver(path(:, 2), ts, n_seg, n_order);
 
+poly_coef_x_p = poly_coef_x';
+poly_coef_y_p = poly_coef_y';
+
+poly_coef_x_p = poly_coef_x_p(1,:);
+poly_coef_y_p = poly_coef_y_p(1,:);
+disp("size of poly coef_x: " + size(poly_coef_x_p));
+disp("size of poly coef y: " + size(poly_coef_y_p));
+
+%disp("1  x: " + poly_coef_x_p(1,:));
+%disp("2  x: " + poly_coef_x_p(2,:));
+%disp("3  x: " + poly_coef_x_p(3,:));
+
+
 X_n = [];
 Y_n = [];
 k = 1;
@@ -37,14 +50,32 @@ for i=0:n_seg-1
     %#####################################################
     % STEP 4: get the coefficients of i-th segment of both x-axis
     % and y-axis
-    Pxi = [];
-    Pyi = [];
+
+    skip = i*(n_order + 1);
+    %disp("skip is : " + skip);
+
+    
+    tmp_x = poly_coef_x_p(1,skip+1: skip+n_order+1);
+    Pxi = flip(tmp_x);
+    sqx = sumsqr(Pxi);
+    %disp("sqx is: " + sqx);
+
+    tmp_y = poly_coef_y_p(1,skip+1: skip+n_order+1);
+    Pyi  =  flip(tmp_y);
+    sqy = sumsqr(Pyi);
+    %disp("sqy is: " + sqy);
+
+
+    %Pxi = [];
+    %Pyi = [];
     for t=0:tstep:ts(i+1)
         X_n(k)  = polyval(Pxi,t);
         Y_n(k)  = polyval(Pyi,t);
         k = k+1;
     end
 end
+
+
 
 %disp("X_n is : " + X_n);
 plot(X_n, Y_n ,'Color',[0 1.0 0],'LineWidth',2);
@@ -99,5 +130,5 @@ function poly_coef = MinimumSnapCloseformSolver(waypoints, ts, n_seg, n_order)
 
     dP = -inv(R_pp) * (R_fp') * dF;
     poly_coef = inv(M) * Ct * [dF;dP];
-    disp("p coef is: " + poly_coef)
+    %disp("p coef is: " + poly_coef);
 end

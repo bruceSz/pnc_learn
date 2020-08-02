@@ -26,7 +26,18 @@ Ct = getCt(n_seg, n_order);
 
 %% check all
 gold = load('hw2Data.mat');
-assert(isequaln(Q,gold.Q))
-assert(isequaln(M,gold.M))
+assert(isequaln(Q,gold.Q));
 assert(isequaln(Ct,gold.Ct))
+%disp("Map matrix size: " + size(M));
+%disp("gold size: " + size(gold.M));
+disp("m1 : " + M(8,:));
+disp("gm1: " + gold.M(8,:));
+for i  = 1:size(M, 1)
+    m1 = M(i,:);
+    gm1 = gold.M(i,:);
+    assert(isequal(m1, gm1));
+    disp("i checked done. [" + i + "]");
+end
+assert(isequaln(M,gold.M))
+
 disp('[TEST] hw2 pass')
