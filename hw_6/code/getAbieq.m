@@ -110,29 +110,32 @@ function [Aieq, bieq] = getAbieq(n_seg, n_order, corridor_range, ts, v_max, a_ma
     bieq_a = zeros(n_seg*(coef_n-2)*2,1);
 
     k = 1;
-    %for i = 1:n_seg
-    %    skip = (i-1)*coef_n;
-    %    for j = 1:coef_n-2
-    %        nn_idx = skip + j + 2;
-    %        n_idx = skip + j + 1;
-    %        idx = skip + j;
-    %        Aieq_a(k,nn_idx) = n_order* (n_order-1);
-    %        Aieq_a(k,n_idx) = n_order*(n_order-1) * (-2) ;
-    %        Aieq_a(k,idx) = n_order * (n_order -1 );
-    %        bieq_v(k) = a_max;
-    %    end
+    for i = 1:n_seg
+        skip = (i-1)*coef_n;
+        for j = 1:coef_n-2
+            nn_idx = skip + j + 2;
+            n_idx = skip + j + 1;
+            idx = skip + j;
+            Aieq_a(k,nn_idx) = n_order* (n_order-1);
+            Aieq_a(k,n_idx) = n_order*(n_order-1) * (-2) ;
+            Aieq_a(k,idx) = n_order * (n_order -1 );
+            bieq_a(k) = a_max;
+            k=k+1
+        end
+    
 %
-    %    for j = 1:coef_n-2
-    %        nn_idx = skip + j + 2;
-    %        n_idx = skip + j + 1;
-    %        idx = skip + j;
-    %        Aieq_a(k,nn_idx) = -1* n_order* (n_order-1);
-    %        Aieq_a(k,n_idx) = -1* n_order*(n_order-1) * (-2) ;
-    %        Aieq_a(k,idx) = -1*  n_order * (n_order -1 );
-    %        bieq_v(k) = -a_max;
-    %    end
-%
-    %end
+        for j = 1:coef_n-2
+            nn_idx = skip + j + 2;
+            n_idx = skip + j + 1;
+            idx = skip + j;
+            Aieq_a(k,nn_idx) = -1* n_order* (n_order-1);
+            Aieq_a(k,n_idx) = -1* n_order*(n_order-1) * (-2) ;
+            Aieq_a(k,idx) = -1*  n_order * (n_order -1 );
+            bieq_a(k) = a_max;
+            k=k+1
+        end
+
+    end
     disp("size of Aieq_p: " + size(Aieq_p));
     disp("size of  Aieq_v: " + size(Aieq_v));
     disp("size of Aieq_a: " + size(Aieq_a));
