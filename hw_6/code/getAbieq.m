@@ -1,15 +1,17 @@
-function [Aieq, bieq] = getAbieq(n_seg, n_order, corridor_range, ts, v_max, a_max)
+function [Aieq, bieq] = getAbieq(n_seg, n_order, corridor_range, ts, v_max, a_max, start_p, end_p)
     n_all_poly = n_seg*(n_order+1);
     coef_n = n_order + 1;
     %#####################################################
     % STEP 3.2.1 p constraint (safe constraint).
     % for all control point, need to set them in between the corridor_range.
     disp("n_all_poly is : " + n_all_poly);
-    Aieq_p = zeros(coef_n*n_seg*2 + (n_seg-1)*2, n_all_poly);
+    Aieq_p = zeros(coef_n*n_seg*2 + (n_seg-1)*2 + 4, n_all_poly);
     disp("size of Aieq_p is : " + size(Aieq_p));
     disp("coef_n is : " + coef_n);
     disp("n_seg is : " + n_seg);
-    bieq_p = zeros(coef_n*n_seg*2 + (n_seg-1)*2, 1);
+    bieq_p = zeros(coef_n*n_seg*2 + (n_seg-1)*2 + 4, 1);
+
+    
 
     k = 1;
     for i=1:n_seg
@@ -73,6 +75,23 @@ function [Aieq, bieq] = getAbieq(n_seg, n_order, corridor_range, ts, v_max, a_ma
         end
 
     end
+
+    % for start_control point of 1 seg, bound ti to start of the traj
+    Aieq_p(k, 1) = 1;
+    bieq_p(k) = start_p;
+    k = k+1;
+    Aieq_p(k, 1) = -1;
+    bieq_p(k) = -start_p;
+    k = k+1;
+    % for end control point of n_seg(last seg), bound it to end of the traj.
+
+    Aieq_p(k, n_seg * coef_n ) = 1;
+    bieq_p(k) = end_p;
+    k = k+1;
+
+    Aieq_p(k, n_seg * coef_n) = -1;
+    bieq_p(k) = - end_p;
+    k = k+1;
 
     %#####################################################
     % STEP 3.2.2 v constraint  

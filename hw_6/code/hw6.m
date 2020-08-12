@@ -120,7 +120,7 @@ function poly_coef = MinimumSnapCorridorBezierSolver(axis, waypoints, corridor, 
     end
     
     % STEP 3.2: get Aieq and bieq
-    [Aieq, bieq] = getAbieq(n_seg, n_order, corridor_range, ts, v_max, a_max);
+    [Aieq, bieq] = getAbieq(n_seg, n_order, corridor_range, ts, v_max, a_max,waypoints(1), waypoints(end));
     
     f = zeros(size(Q_0,1),1);
     poly_coef = quadprog(Q_0,f,Aieq, bieq, Aeq, beq);
