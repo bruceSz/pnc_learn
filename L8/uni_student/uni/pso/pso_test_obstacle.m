@@ -30,7 +30,7 @@ tgt_list=[];
 a_list=[];
 
 %% Simulation starts here
-for n=1:300
+for n=1:30
     % Use the PSO algorithm to selet the best velocity and angular velocity
     % target
     global_best = pso_select(theta,omega,v_c,[x y]',theta_target,v_target);
@@ -39,11 +39,14 @@ for n=1:300
     
     % Prepare the translational trajectory
     a_star = sign(v_target-v_c)*2;
+
     if v_target~=v_c
         t_acc = (v_target-v_c)/a_star;
     else
         t_acc = 0;
     end
+
+    disp("t_acc is: " + t_acc);
     
     % Prepare the angular trajectory
     ini.p = 0;
